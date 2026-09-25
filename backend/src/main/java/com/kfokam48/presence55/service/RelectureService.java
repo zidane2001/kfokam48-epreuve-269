@@ -62,7 +62,7 @@ public class RelectureService {
         }
 
         r.rendre(req.note(), req.commentaire(), OffsetDateTime.now());
-        ex.setStatut(Exercice.Statut.RELU);                              // D4 : EN_ATTENTE -> RELU
+        ex.setStatut(Exercice.Statut.RELU);                              // D4 : -> RELU
         relectures.save(r);
         exercices.save(ex);
 

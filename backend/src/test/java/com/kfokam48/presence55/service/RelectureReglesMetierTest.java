@@ -34,9 +34,10 @@ class RelectureReglesMetierTest {
         service = new RelectureService(relectures, exercices, sessions);
 
         // Bob (id 2) relit l'exercice d'Alice (id 1) : RG10 n'est pas en jeu ici
-        relecture = new Relecture(100L, 2L);
+        relecture = new Relecture(100L, 2L, java.time.OffsetDateTime.now());
         when(relectures.findById(1L)).thenReturn(Optional.of(relecture));
-        when(exercices.findById(100L)).thenReturn(Optional.of(new Exercice(10L, 1L, "https://a.b/x")));
+        when(exercices.findById(100L)).thenReturn(Optional.of(
+                new Exercice(10L, 1L, "https://a.b/x", java.time.OffsetDateTime.now())));
     }
 
     @Test

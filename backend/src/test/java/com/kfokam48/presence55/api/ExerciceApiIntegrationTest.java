@@ -38,14 +38,14 @@ class ExerciceApiIntegrationTest {
         sessionId = promoId + 3;
 
         jdbc.update("insert into promotion (id, nom) values (?, 'Promo exercice')", promoId);
-        jdbc.update("insert into etudiant (id, nom, promotion_id) values (?, 'Alice', ?)", aliceId, promoId);
-        jdbc.update("insert into etudiant (id, nom, promotion_id) values (?, 'Bob', ?)", bobId, promoId);
+        jdbc.update("insert into etudiant (id, prenom, nom, promotion_id) values (?, 'Alice', 'Test', ?)", aliceId, promoId);
+        jdbc.update("insert into etudiant (id, prenom, nom, promotion_id) values (?, 'Bob', 'Test', ?)", bobId, promoId);
         jdbc.update("insert into session_cours (id, titre, promotion_id, code, ouverture_at, expiration_at, cloturee) " +
                 "values (?, 'Session exercice', ?, 'TX2345', ?, ?, false)",
                 sessionId, promoId, OffsetDateTime.now(), OffsetDateTime.now().plusMinutes(15));
         // Alice et Bob sont presents (RG4 : le relecteur est choisi parmi les presents)
-        jdbc.update("insert into presence (session_id, etudiant_id, source) values (?, ?, 'ETUDIANT')", sessionId, aliceId);
-        jdbc.update("insert into presence (session_id, etudiant_id, source) values (?, ?, 'ETUDIANT')", sessionId, bobId);
+        jdbc.update("insert into presence (session_id, etudiant_id, source, enregistree_at) values (?, ?, 'ETUDIANT', now())", sessionId, aliceId);
+        jdbc.update("insert into presence (session_id, etudiant_id, source, enregistree_at) values (?, ?, 'ETUDIANT', now())", sessionId, bobId);
     }
 
     @Test
@@ -56,12 +56,14 @@ class ExerciceApiIntegrationTest {
                                 ",\"lien\":\"https://github.com/alice/exo\"}"))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").exists())
-                .andExpect(jsonPath("$.statut").value("EN_ATTENTE"))
+                .andExpect(jsonPath("$.statut").value("RELECTEUR_ATTRIBUE"))
                 .andReturn().getResponse().getContentAsString();
+        long exerciceId = Long.parseLong(body.replaceAll(".*\"id\":([0-9]+).*", "$1"));
 
-        // RG2 : le relecteur assigne n'est jamais Alice (la deposante) — ici il ne peut etre que Bob
-        long relecteurId = Long.parseLong(body.replaceAll(".*\"relecteurId\":([0-9]+).*", "$1"));
-        assertThat(relecteurId).isEqualTo(bobId);
+        // RG10 : le relecteur assigne n'est jamais Alice (la deposante) — ici il ne peut etre que Bob
+        Long relecteurId = jdbc.queryForObject(
+                "select relecteur_id from relecture where exercice_id = ?", Long.class, exerciceId);
+        org.assertj.core.api.Assertions.assertThat(relecteurId).isEqualTo(bobId);
     }
 
     @Test

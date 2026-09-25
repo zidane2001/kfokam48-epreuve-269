@@ -12,6 +12,9 @@ public class Etudiant {
     private Long id;
 
     @Column(nullable = false)
+    private String prenom;
+
+    @Column(nullable = false)
     private String nom;
 
     @Column(name = "promotion_id", nullable = false)
@@ -19,12 +22,14 @@ public class Etudiant {
 
     protected Etudiant() { }
 
-    public Etudiant(String nom, Long promotionId) {
+    public Etudiant(String prenom, String nom, Long promotionId) {
+        this.prenom = prenom;
         this.nom = nom;
         this.promotionId = promotionId;
     }
 
     public Long getId() { return id; }
+    public String getPrenom() { return prenom; }
     public String getNom() { return nom; }
     public Long getPromotionId() { return promotionId; }
 }
