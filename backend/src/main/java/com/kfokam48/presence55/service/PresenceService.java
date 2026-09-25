@@ -79,7 +79,7 @@ public class PresenceService {
                     "Vous etes deja marque present pour cette session."); // RG4 -> 409
         }
         Presence p = presences.save(
-                new Presence(session.getId(), etudiant.getId(), Presence.Source.ETUDIANT));
+                new Presence(session.getId(), etudiant.getId(), Presence.Source.ETUDIANT, maintenant));
         return new PresenceResponse(p.getId(), session.getId(), etudiant.getId(), p.getSource().name());
     }
 }

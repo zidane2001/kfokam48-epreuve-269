@@ -27,12 +27,14 @@ public class DemoDataLoader implements CommandLineRunner {
         jdbc.update("insert into promotion (nom) values (?)", "KFOKAM48 - Promotion 2026");
         Long promotionId = jdbc.queryForObject("select id from promotion limit 1", Long.class);
 
-        String[] noms = {
-                "Yannick Tchoupo", "Marie Ngo Bell", "Junior Onana", "Serge Etoundi",
-                "Aline Mballa", "Christian Ngassa", "Josiane Fofack", "Patrick Ekema"
+        String[][] personnes = {
+                {"Yannick", "Tchoupo"}, {"Marie", "Ngo Bell"}, {"Junior", "Onana"},
+                {"Serge", "Etoundi"}, {"Aline", "Mballa"}, {"Christian", "Ngassa"},
+                {"Josiane", "Fofack"}, {"Patrick", "Ekema"}
         };
-        for (String nom : noms) {
-            jdbc.update("insert into etudiant (nom, promotion_id) values (?, ?)", nom, promotionId);
+        for (String[] p : personnes) {
+            jdbc.update("insert into etudiant (prenom, nom, promotion_id) values (?, ?, ?)",
+                    p[0], p[1], promotionId);
         }
     }
 }

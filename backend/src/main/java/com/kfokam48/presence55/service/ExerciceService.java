@@ -13,7 +13,6 @@ import com.kfokam48.presence55.repository.RelectureRepository;
 import com.kfokam48.presence55.repository.EtudiantRepository;
 import com.kfokam48.presence55.repository.SessionRepository;
 
-import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.net.URI;
@@ -64,27 +63,30 @@ public class ExerciceService {
                     "Vous avez deja depose un exercice pour cette session.");  // -> 409
         }
 
-        Exercice ex = exercices.save(new Exercice(req.sessionId(), req.etudiantId(), lienValide));
-        Long relecteurId = assignerRelecteur(ex);                        // EF3
+        Exercice ex = exercices.save(new Exercice(req.sessionId(), req.etudiantId(), lienValide, OffsetDateTime.now()));
+        assignerRelecteur(ex);                                           // EF10 : attribue -> RELECTEUR_ATTRIBUE
 
-        return new DepotResponse(ex.getId(), ex.getStatut().name(), relecteurId);
+        return new DepotResponse(ex.getId(), ex.getStatut().name());
     }
 
-    /** EF3/RG4 : relecteur au hasard parmi les presents != depositaire (RG2). */
-    private Long assignerRelecteur(Exercice ex) {
+    /** EF10/RG9 : relecteur au hasard parmi les presents != depositaire (RG10).
+     *  CDC v2 7.8 : l'attribution EST le debut de la relecture -> RELECTEUR_ATTRIBUE. */
+    private void assignerRelecteur(Exercice ex) {
         List<Long> presents = presences.findBySessionId(ex.getSessionId()).stream()
                 .map(Presence::getEtudiantId)
-                .filter(id -> !id.equals(ex.getEtudiantId()))            // RG2 : jamais soi-meme
+                .filter(id -> !id.equals(ex.getEtudiantId()))            // RG10 : jamais soi-meme
                 .toList();
         if (presents.isEmpty()) {
-            return null;                                                 // RG7 : reste EN_ATTENTE sans relecteur
+            return;                                                      // 7.6 : reste EN_ATTENTE_RELECTEUR
         }
         Long relecteurId = presents.get(RNG.nextInt(presents.size()));
-        relectures.save(new Relecture(ex.getId(), relecteurId));
-        return relecteurId;
+        relectures.save(new Relecture(ex.getId(), relecteurId, OffsetDateTime.now()));
+        ex.setStatut(Exercice.Statut.RELECTEUR_ATTRIBUE);
+        exercices.save(ex);
     }
 
-    private String validerLien(String lien) {
+    /** Validation du lien, partagee avec PUT /api/exercices/{id}/lien (EF14). */
+    public static String validerLien(String lien) {
         if (lien == null || lien.isBlank()) {
             throw new BusinessException("LIEN_INVALIDE", "Le lien de l'exercice est obligatoire.");
         }

@@ -7,5 +7,6 @@ import java.util.Optional;
 
 public interface RelectureRepository extends JpaRepository<Relecture, Long> {
     Optional<Relecture> findByExerciceId(Long exerciceId);
+    List<Relecture> findByRelecteurId(Long relecteurId);
     List<Relecture> findByRelecteurIdAndRendueAtIsNull(Long relecteurId);
 }

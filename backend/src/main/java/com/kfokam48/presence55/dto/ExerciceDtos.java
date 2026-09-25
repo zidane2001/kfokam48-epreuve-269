@@ -11,6 +11,6 @@ public final class ExerciceDtos {
             @NotNull(message = "etudiantId manquant") Long etudiantId,
             @NotBlank(message = "lien manquant") String lien) { }
 
-    /** Reponse 201 du contrat : { id, statut } + infos utiles pour l'ecran. */
-    public record DepotResponse(Long id, String statut, Long relecteurId) { }
+    /** Reponse 201 du contrat : { id, statut }. */
+    public record DepotResponse(Long id, String statut) { }
 }

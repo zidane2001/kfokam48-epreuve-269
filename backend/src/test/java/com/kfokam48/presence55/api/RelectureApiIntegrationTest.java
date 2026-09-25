@@ -36,18 +36,18 @@ class RelectureApiIntegrationTest {
         sessionId = promoId + 3;
 
         jdbc.update("insert into promotion (id, nom) values (?, 'Promo relecture')", promoId);
-        jdbc.update("insert into etudiant (id, nom, promotion_id) values (?, 'Alice', ?)", aliceId, promoId);
-        jdbc.update("insert into etudiant (id, nom, promotion_id) values (?, 'Bob', ?)", bobId, promoId);
+        jdbc.update("insert into etudiant (id, prenom, nom, promotion_id) values (?, 'Alice', 'Test', ?)", aliceId, promoId);
+        jdbc.update("insert into etudiant (id, prenom, nom, promotion_id) values (?, 'Bob', 'Test', ?)", bobId, promoId);
         jdbc.update("insert into session_cours (id, titre, promotion_id, code, ouverture_at, expiration_at, cloturee) " +
                 "values (?, 'Session relecture', ?, 'RX2345', ?, ?, false)",
                 sessionId, promoId, OffsetDateTime.now(), OffsetDateTime.now().plusMinutes(15));
-        jdbc.update("insert into presence (session_id, etudiant_id, source) values (?, ?, 'ETUDIANT')", sessionId, aliceId);
-        jdbc.update("insert into presence (session_id, etudiant_id, source) values (?, ?, 'ETUDIANT')", sessionId, bobId);
+        jdbc.update("insert into presence (session_id, etudiant_id, source, enregistree_at) values (?, ?, 'ETUDIANT', now())", sessionId, aliceId);
+        jdbc.update("insert into presence (session_id, etudiant_id, source, enregistree_at) values (?, ?, 'ETUDIANT', now())", sessionId, bobId);
         // Alice depose, Bob est assigne relecteur
-        jdbc.update("insert into exercice (id, session_id, etudiant_id, lien, statut) " +
-                "values (?, ?, ?, 'https://a.b/exo', 'EN_ATTENTE')", sessionId + 10, sessionId, aliceId);
+        jdbc.update("insert into exercice (id, session_id, etudiant_id, lien, statut, depose_at) " +
+                "values (?, ?, ?, 'https://a.b/exo', 'RELECTEUR_ATTRIBUE', now())", sessionId + 10, sessionId, aliceId);
         exerciceId = sessionId + 10;
-        jdbc.update("insert into relecture (id, exercice_id, relecteur_id) values (?, ?, ?)",
+        jdbc.update("insert into relecture (id, exercice_id, relecteur_id, attribuee_at, statut) values (?, ?, ?, now(), 'EN_ATTENTE')",
                 sessionId + 11, exerciceId, bobId);
         relectureId = sessionId + 11;
     }

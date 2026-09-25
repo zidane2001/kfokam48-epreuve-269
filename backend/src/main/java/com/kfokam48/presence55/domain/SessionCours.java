@@ -32,6 +32,9 @@ public class SessionCours {
     @Column(nullable = false)
     private boolean cloturee;
 
+    @Column(name = "cloture_at")
+    private OffsetDateTime clotureAt;
+
     protected SessionCours() { }
 
     public SessionCours(String titre, Long promotionId, String code,
@@ -49,7 +52,10 @@ public class SessionCours {
         return maintenant.isAfter(expirationAt);
     }
 
-    public void cloturer() { this.cloturee = true; }
+    public void cloturer(OffsetDateTime quand) {
+        this.cloturee = true;
+        this.clotureAt = quand;
+    }
 
     public Long getId() { return id; }
     public String getTitre() { return titre; }
@@ -58,4 +64,5 @@ public class SessionCours {
     public OffsetDateTime getOuvertureAt() { return ouvertureAt; }
     public OffsetDateTime getExpirationAt() { return expirationAt; }
     public boolean isCloturee() { return cloturee; }
+    public OffsetDateTime getClotureAt() { return clotureAt; }
 }

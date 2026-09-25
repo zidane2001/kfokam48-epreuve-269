@@ -36,23 +36,23 @@ class TableauApiIntegrationTest {
         exerciceBob = promoId + 5;
 
         jdbc.update("insert into promotion (id, nom) values (?, 'Promo tableau')", promoId);
-        jdbc.update("insert into etudiant (id, nom, promotion_id) values (?, 'Alice', ?)", aliceId, promoId);
-        jdbc.update("insert into etudiant (id, nom, promotion_id) values (?, 'Bob', ?)", bobId, promoId);
+        jdbc.update("insert into etudiant (id, prenom, nom, promotion_id) values (?, 'Alice', 'Dubois', ?)", aliceId, promoId);
+        jdbc.update("insert into etudiant (id, prenom, nom, promotion_id) values (?, 'Bob', 'Martin', ?)", bobId, promoId);
         jdbc.update("insert into session_cours (id, titre, promotion_id, code, ouverture_at, expiration_at, cloturee) " +
                 "values (?, 'S1', ?, 'TB2345', ?, ?, false)",
                 sessionId, promoId, OffsetDateTime.now(), OffsetDateTime.now().plusMinutes(15));
-        jdbc.update("insert into presence (session_id, etudiant_id, source) values (?, ?, 'ETUDIANT')", sessionId, aliceId);
+        jdbc.update("insert into presence (session_id, etudiant_id, source, enregistree_at) values (?, ?, 'ETUDIANT', now())", sessionId, aliceId);
         // Bob absent
-        jdbc.update("insert into exercice (id, session_id, etudiant_id, lien, statut) " +
-                "values (?, ?, ?, 'https://a.b/alice', 'RELU')", exerciceAlice, sessionId, aliceId);
-        jdbc.update("insert into exercice (id, session_id, etudiant_id, lien, statut) " +
-                "values (?, ?, ?, 'https://a.b/bob', 'EN_ATTENTE')", exerciceBob, sessionId, bobId);
+        jdbc.update("insert into exercice (id, session_id, etudiant_id, lien, statut, depose_at) " +
+                "values (?, ?, ?, 'https://a.b/alice', 'RELU', now())", exerciceAlice, sessionId, aliceId);
+        jdbc.update("insert into exercice (id, session_id, etudiant_id, lien, statut, depose_at) " +
+                "values (?, ?, ?, 'https://a.b/bob', 'EN_ATTENTE_RELECTEUR', now())", exerciceBob, sessionId, bobId);
         // Alice a recu un 15 et un 13 -> moyenne 14 ; Bob doit encore relire l'exercice d'Alice ? non :
         // Bob relect l'exercice d'Alice (rendu) ; Alice doit relire celui de Bob (en attente)
-        jdbc.update("insert into relecture (id, exercice_id, relecteur_id, note, commentaire, rendue_at) " +
-                "values (?, ?, ?, 15, 'bien', now())", exerciceBob + 1, exerciceAlice, bobId);
-        jdbc.update("insert into relecture (id, exercice_id, relecteur_id) " +
-                "values (?, ?, ?)", exerciceBob + 2, exerciceBob, aliceId);
+        jdbc.update("insert into relecture (id, exercice_id, relecteur_id, note, commentaire, rendue_at, attribuee_at, statut) " +
+                "values (?, ?, ?, 15, 'bien', now(), now(), 'RENDUE')", exerciceBob + 1, exerciceAlice, bobId);
+        jdbc.update("insert into relecture (id, exercice_id, relecteur_id, attribuee_at, statut) " +
+                "values (?, ?, ?, now(), 'EN_ATTENTE')", exerciceBob + 2, exerciceBob, aliceId);
     }
 
     @Test
@@ -60,12 +60,12 @@ class TableauApiIntegrationTest {
         mvc.perform(get("/api/tableau").param("promotionId", String.valueOf(promoId)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(2))
-                .andExpect(jsonPath("$[0].nom").value("Alice"))
+                .andExpect(jsonPath("$[0].nom").value("Alice Dubois"))
                 .andExpect(jsonPath("$[0].presences").value(1))
                 .andExpect(jsonPath("$[0].exercicesDeposes").value(1))
                 .andExpect(jsonPath("$[0].moyenne").value(15.0))
                 .andExpect(jsonPath("$[0].relecturesEnAttente").value(1))  // Alice doit relire Bob
-                .andExpect(jsonPath("$[1].nom").value("Bob"))
+                .andExpect(jsonPath("$[1].nom").value("Bob Martin"))
                 .andExpect(jsonPath("$[1].presences").value(0))
                 .andExpect(jsonPath("$[1].relecturesEnAttente").value(0));
     }
@@ -75,7 +75,7 @@ class TableauApiIntegrationTest {
         // CDC v2 7.9 : Bob n'a recu aucune note -> moyenne absente (null), pas 0
         mvc.perform(get("/api/tableau").param("promotionId", String.valueOf(promoId)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[1].nom").value("Bob"))
+                .andExpect(jsonPath("$[1].nom").value("Bob Martin"))
                 .andExpect(jsonPath("$[1].moyenne").value(org.hamcrest.Matchers.nullValue()));
     }
 

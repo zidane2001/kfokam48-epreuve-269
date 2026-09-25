@@ -43,7 +43,7 @@ public class TableauService {
         return etudiants.findByPromotionId(promotionId).stream()
                 .map(e -> new LigneTableau(
                         e.getId(),
-                        e.getNom(),
+                        e.getPrenom() + " " + e.getNom(),
                         presences.countByEtudiantId(e.getId()),
                         exercices.countByEtudiantId(e.getId()),
                         moyenne(e.getId()),
