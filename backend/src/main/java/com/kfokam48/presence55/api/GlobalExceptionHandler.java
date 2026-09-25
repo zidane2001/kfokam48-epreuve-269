@@ -38,11 +38,13 @@ public class GlobalExceptionHandler {
             case "CODE_EXPIRE" -> HttpStatus.GONE;                    // 410
             case "DEJA_PRESENT", "EXERCICE_DEJA_DEPOSE",
                  "RELECTURE_DEJA_RENDUE", "SESSION_DEJA_CLOTUREE",
-                 "SESSION_DEJA_ACTIVE", "RELECTURE_COMMENCEE" -> HttpStatus.CONFLICT;        // 409
+                 "SESSION_DEJA_ACTIVE", "RELECTURE_COMMENCEE",
+                 "SESSION_CLOTUREE" -> HttpStatus.CONFLICT;        // 409
             case "AUTO_RELECTURE" -> HttpStatus.FORBIDDEN;            // 403
             case "PROMOTION_INCONNUE", "SESSION_INCONNUE",
                  "ETUDIANT_INCONNU", "EXERCICE_INCONNU",
                  "RELECTURE_INCONNUE" -> HttpStatus.NOT_FOUND;        // 404
+            case "RELECTURE_AUTRE_ETUDIANT", "EXERCICE_AUTRE_ETUDIANT" -> HttpStatus.FORBIDDEN; // 403
             case "TROP_DE_TENTATIVES" -> HttpStatus.TOO_MANY_REQUESTS;// 429
             default -> HttpStatus.BAD_REQUEST;                        // 400 (CODE_INCONNU, LIEN_INVALIDE, NOTE_INVALIDE...)
         };
