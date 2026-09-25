@@ -25,5 +25,10 @@
 **Bloqué :** ~10 min de compilation (référence au DTO imbriqué de PromotionController — remplacé par des DTOs locaux) ; homonymies d'étudiants traitées par suffixe du login avec l'id.
 **IA :** a implémenté l'écran de gestion et les endpoints, exécuté l'E2E réel (promotion KFOKAM49 créée, étudiante Diane Ngoma inscrite, son compte a ouvert une session immédiatement), mis à jour toutes les documentations en repartant des fichiers (pas de mémoire).
 
+## Étape 4 (suite) — Suppressions gardées
+**Fait :** issue #30 : le formateur peut supprimer un étudiant sans participation (compte détruit avec lui) et une promotion vide ; 409 dédiés (ETUDIANT_A_DEJA_PARTICIPE, PROMOTION_NON_VIDE, PROMOTION_A_DEJA_SESSION) pour préserver l'historique pédagogique ; boutons avec confirmation dans l'écran Gestion ; 49 tests verts ; suppressions vérifiées en réel sur Neon (204/401/409). CDC 7.15, D1 UC17/UC18, BACKLOG #18, contrat.yaml mis à jour.
+**Bloqué :** rien de notable — pattern déjà en place après #29.
+**IA :** a écrit endpoints, tests et confirmations front ; validation par exécution (tests H2 puis DELETE réels contre Neon, données de test nettoyées au passage).
+
 ## Étape 5 — Épreuve Git
 *(à venir)*
