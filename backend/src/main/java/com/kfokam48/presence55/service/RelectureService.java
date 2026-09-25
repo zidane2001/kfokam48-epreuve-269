@@ -48,7 +48,7 @@ public class RelectureService {
             throw new BusinessException("AUTO_RELECTURE",
                     "Personne ne relit son propre exercice.");
         }
-        if (r.getRendueAt() != null) {                                   // RG3 -> 409
+        if (r.getRendueAt() != null || r.getStatut() == Relecture.Statut.RENDUE) {  // RG16 -> 409
             throw new BusinessException("RELECTURE_DEJA_RENDUE",
                     "Cette relecture a deja ete rendue.");
         }
@@ -62,9 +62,17 @@ public class RelectureService {
         }
 
         r.rendre(req.note(), req.commentaire(), OffsetDateTime.now());
-        ex.setStatut(Exercice.Statut.RELU);                              // D4 : -> RELU
         relectures.save(r);
-        exercices.save(ex);
+
+        // Issue #25 : l'exercice passe RELU quand TOUS ses relecteurs ont rendu.
+        // Avec 2 relecteurs, un seul rendu -> l'exercice reste RELECTEUR_ATTRIBUE
+        // et la note s'affiche PROVISOIRE (decision client, enveloppe etape 3).
+        boolean tousRendus = relectures.findAllByExerciceId(ex.getId()).stream()
+                .allMatch(x -> x.getStatut() == Relecture.Statut.RENDUE);
+        if (tousRendus) {
+            ex.setStatut(Exercice.Statut.RELU);
+            exercices.save(ex);
+        }
 
         return new RelectureResponse(r.getId(), ex.getId(), r.getNote(),
                 r.getCommentaire(), ex.getStatut().name());

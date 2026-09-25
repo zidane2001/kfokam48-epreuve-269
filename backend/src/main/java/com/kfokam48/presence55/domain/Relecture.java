@@ -3,9 +3,11 @@ package com.kfokam48.presence55.domain;
 import jakarta.persistence.*;
 import java.time.OffsetDateTime;
 
-/** Relecture d'un exercice par un pair. Un seul relecteur (RG8), note entiere 0-20 (RG12). */
+/** Relecture d'un exercice par un pair. Issue #25 : DEUX relecteurs par exercice
+ *  (unicite par couple exercice+relecteur), note entiere 0-20 (RG12). */
 @Entity
-@Table(name = "relecture")
+@Table(name = "relecture",
+       uniqueConstraints = @UniqueConstraint(columnNames = {"exercice_id", "relecteur_id"}))
 public class Relecture {
 
     public enum Statut { EN_ATTENTE, RENDUE }
@@ -14,7 +16,7 @@ public class Relecture {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "exercice_id", nullable = false, unique = true)   // RG8 : un seul relecteur
+    @Column(name = "exercice_id", nullable = false)
     private Long exerciceId;
 
     @Column(name = "relecteur_id", nullable = false)
