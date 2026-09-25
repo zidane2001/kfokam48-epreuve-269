@@ -1,6 +1,8 @@
 # Cahier des charges — Plateforme de gestion des sessions, présences et relectures
 
-Auteur : KF48-...-269 (zidane2001) · Version : 2.0 (remplace la v1, décision du PO) · Frontend choisi : React (via Next.js) — pour permettre une interface web simple, responsive et adaptée aux trois espaces fonctionnels demandés.
+Auteur : KF48-...-269 (zidane2001) · Version : 3.0 (v2 + changement de besoin de l'enveloppe, issue #25) · Frontend choisi : React (via Next.js) — pour permettre une interface web simple, responsive et adaptée aux trois espaces fonctionnels demandés.
+
+> **Changement de besoin (enveloppe étape 3, issue #25)** : chaque exercice est relu par **deux pairs différents** ; la note retenue est la **moyenne des deux** ; si un seul a rendu, sa note s'affiche **provisoirement**. Cela remplace Q6/RG8 (un seul relecteur). Migration V5 ajoutée ; RG8 et EF10/EF16/EF17 mises à jour ci-dessous.
 
 ## 1. Contexte et objectif
 
@@ -154,7 +156,7 @@ Les éléments suivants ne font pas partie du périmètre initial :
 | RG5 | Un étudiant ne peut déposer qu'un seul exercice pour une session | Contrat API |
 | RG6 | Le dépôt d'exercice reste possible après expiration du code, jusqu'à la clôture de la session | Q12 |
 | RG7 | Le lien d'un exercice peut être remplacé tant qu'aucune relecture n'a commencé | Q13 |
-| RG8 | Un exercice possède un seul relecteur | Q6 |
+| RG8 | Un exercice possède **deux relecteurs** distincts (issue #25, remplace Q6). Fallback : un seul si un seul autre présent ; aucun → EN_ATTENTE_RELECTEUR | Q6 + enveloppe étape 3 |
 | RG9 | Le relecteur est choisi aléatoirement parmi les étudiants présents à la session | Q7 |
 | RG10 | L'auteur d'un exercice ne peut pas relire son propre exercice | Q5 |
 | RG11 | L'auteur voit sa note et son commentaire mais pas l'identité du relecteur | Q8 |
@@ -162,6 +164,8 @@ Les éléments suivants ne font pas partie du périmètre initial :
 | RG13 | Une présence ajoutée manuellement par le formateur porte la source FORMATEUR | Q14 + contrat API |
 | RG14 | Une présence enregistrée par l'étudiant porte la source ETUDIANT | Contrat API |
 | RG15 | Une relecture non rendue reste en attente et doit apparaître dans le tableau du formateur | Q11 |
+| RG21 | La note retenue est la **moyenne des deux relectures** ; si une seule est rendue, elle s'affiche **provisoirement** (issue #25) | enveloppe étape 3 |
+| RG22 | L'exercice passe RELU quand **tous** ses relecteurs ont rendu (issue #25) | enveloppe étape 3 |
 | RG16 | La relecture reste modifiable jusqu'à la clôture de la session | Q10 |
 | RG17 | Une relecture devient définitive lorsque la session est clôturée | Décision issue de Q10 |
 | RG18 | Une session peut continuer à recevoir des exercices après l'expiration du code | Q2 + Q12 |
@@ -229,6 +233,18 @@ Q11 demande que les relectures non rendues restent « en attente ».
 Le contrat prévoit un champ commentaire mais ne précise pas explicitement son caractère obligatoire.
 
 **Décision** — Le commentaire est obligatoire lors de la soumission d'une relecture. Cette décision garantit qu'une note est accompagnée d'un retour pédagogique.
+
+### 7.12 Deux relecteurs par exercice (changement de besoin, issue #25)
+Le client a demandé après la v0.1 que chaque exercice soit relu par deux pairs, la note retenue étant la moyenne des deux, provisoire si une seule relecture est rendue.
+
+**Décision** — RG8 remplacée (2 relecteurs distincts), RG21/RG22 ajoutées (moyenne, provisoire, RELU quand tous ont rendu). Migration **V5 ajoutée** (V1–V4 jamais modifiées) : suppression de l'unicité `relecteur.exercice_id`, nouvelle unicité `(exercice_id, relecteur_id)`.
+
+**Justification** — Une seule note ne fiabilise pas l'évaluation ; deux avis moyennés sont plus justes. La compatibilité descendante est assurée : les relectures existantes de la base de démonstration survivent à V5.
+
+### 7.13 Périmètre sacrifié (re-priorisation assumée)
+Ce Must arrive tard : pour tenir le délai, **sortent du périmètre v1.0** :
+- l'écran de modification du lien (EF14 : l'endpoint PUT reste livré et testé, seul le bouton front est reporté) ;
+- les écrans dédiés aux Should restants (présence manuelle et correction de note restent accessibles par l'API, testées).
 
 ## 8. Contraintes techniques
 
