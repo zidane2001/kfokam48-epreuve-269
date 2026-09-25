@@ -1,18 +1,20 @@
 # Journal — Presence55 (kfokam48-epreuve-269)
 
 ## Étape 1 — Analyse et conception
-**Fait :** cahier des charges (12 EF, 13 RG), 4 diagrammes Mermaid (D1–D3 + D4 bonus), contrat d'API complété (11 chemins, 5 imposés intacts, fusion post+put sur /api/relectures/{id}), backlog de 15 tickets priorisés, commit `[JALON] analyse` posé avant tout code.
-**Bloqué :** ~15 min — clé dupliquée `/api/relectures/{id}` dans le contrat après ajout du PUT (le post imposé était écrasé) ; détecté en relisant le YAML chargé en Python, fusionné en un seul chemin post+put. Contradiction Q10/Q15 tranchée en faveur de Q10 (~10 min), trou Q4 (comptage des échecs) écrit à la place du client.
-**IA :** proposition de découpage en 15 tickets retenue telle quelle après relecture titre par titre (un résultat vérifiable par ticket) ; vérification du contrat faite en relisant le YAML en machine, pas à l'œil ; décisions §7 relues contre les citations exactes de CLIENT.md.
+**Fait :** cahier des charges (v1 puis v2 du PO : 18 EF, 20 RG, 20 ENF), 4 diagrammes Mermaid (D1–D3 + D4 bonus), contrat d'API complété (les 5 opérations imposées à la lettre + opérations ajoutées), backlog de 15 tickets en issues GitHub avec priorités et renvois EFx/RGx, commit `[JALON] analyse` posé avant tout code.
+**Bloqué :** ~15 min sur la clé dupliquée `/api/relectures/{id}` dans le contrat (post écrasé par le put) — détecté en chargeant le YAML en Python, fusionné. Contradictions Q10/Q15 tranchées en faveur de Q10 (~10 min).
+**IA :** a proposé le découpage en tickets, retenu après relecture titre par titre ; vérifications faites en machine (YAML chargé, pas lu à l'œil).
 
 ## Étape 2 — Première version (v0.1)
-*(à remplir pendant l'étape)*
+**Fait :** backend complet (squelette + sessions/présence + exercices/relecteur + relectures + tableau + espaces formateur/étudiant), frontend Next.js portant le design fourni par le PO, branché sur l'API réelle. Une branche + une PR par ticket (1, 3, 4, 5, 6, A, B, C, qa-fix, v4), issues fermées par les merges. 4 migrations Flyway (V1–V4). 29 tests verts dont 8 parcours utilisateurs complets ; 2 tests E2E réels backend+front contre PostgreSQL.
+**Bloqué :** ~20 min sur le blocage RG3 (échecs rollbackés avec la requête — corrigé par transaction REQUIRES_NEW) ; ~15 min sur une colonne manquante attrapée par ddl-auto=validate (V4) ; token GitHub sans droit PR (PR créées à la main par le PO).
+**IA :** a écrit code et tests ; chaque livrable vérifié par exécution réelle (compilation, tests H2, démarrage contre Neon, parcours curl, build Next.js). 4 vrais bugs trouvés et corrigés grâce aux tests (mauvais repository, blocage jamais persisté, DTO trompé d'id, statut HTTP erroné).
 
 ## Étape 3 — Enveloppe
-*(à remplir pendant l'étape)*
+*(à venir)*
 
 ## Étape 4 — Version finale (v1.0)
-*(à remplir pendant l'étape)*
+*(à venir)*
 
 ## Étape 5 — Épreuve Git
-*(à remplir pendant l'étape)*
+*(à venir)*
