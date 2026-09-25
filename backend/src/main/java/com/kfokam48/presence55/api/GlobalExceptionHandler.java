@@ -2,6 +2,8 @@ package com.kfokam48.presence55.api;
 
 import com.kfokam48.presence55.dto.ApiError;
 import com.kfokam48.presence55.exception.BusinessException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -12,6 +14,8 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 /** B4 : toute erreur sort au format impose { code, message }, sans stack trace. */
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
     @ExceptionHandler(BusinessException.class)
     public ResponseEntity<ApiError> metier(BusinessException e) {
@@ -37,7 +41,8 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiError> inattendue(Exception e) {
-        // B4 : log serveur seulement, le client ne recoit jamais la stack trace
+        // B4 : stack trace cote serveur uniquement, le client ne recoit jamais le detail
+        log.error("Erreur inattendue", e);
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(new ApiError("ERREUR_INATTENDUE", "Une erreur interne est survenue."));
     }

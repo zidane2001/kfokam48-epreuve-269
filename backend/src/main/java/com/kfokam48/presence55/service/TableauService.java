@@ -53,10 +53,12 @@ public class TableauService {
 
     /** CDC v2 7.9 : null si aucune note recue — 0 est une note valide, on ne l'affiche pas a tort. */
     private Double moyenne(Long etudiantId) {
+        // issue #25 : un exercice peut avoir plusieurs relectures — findAllByExerciceId (liste),
+        // findByExerciceId (Optional) echouait des que 2 relecteurs existaient.
         java.util.OptionalDouble moyenne = exercices.findByEtudiantId(etudiantId).stream()
                 .map(Exercice::getId)
-                .map(relectures::findByExerciceId)
-                .flatMap(java.util.Optional::stream)
+                .map(relectures::findAllByExerciceId)
+                .flatMap(java.util.List::stream)
                 .map(Relecture::getNote)
                 .filter(java.util.Objects::nonNull)
                 .mapToInt(Integer::intValue)
