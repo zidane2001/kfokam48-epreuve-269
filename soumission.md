@@ -3,7 +3,7 @@ Matricule : 269
 Centre : Yaoundé
 
 Dépôt projet (public) : https://github.com/zidane2001/kfokam48-epreuve-269
-Commit final : a9c9f3b7cfffcb6d8412a1d479895c10f5a4d2c0
+Commit final : b5ad92bd5337c65e12292ebb4fb6bda0fae5cc55
 
 Épreuve Git (étape 5) : https://github.com/zidane2001/kfokam48-gitlab-269
 Commit final : (non réalisée — git-lab.bundle jamais fourni dans le dossier)
