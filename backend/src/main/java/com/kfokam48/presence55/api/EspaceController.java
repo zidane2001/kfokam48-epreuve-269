@@ -125,7 +125,7 @@ public class EspaceController {
     public List<ExerciceAuteurDto> mesExercices(@PathVariable Long etudiantId) {
         etudiant(etudiantId);
         return exercices.findByEtudiantId(etudiantId).stream()
-                .map(ex -> versAuteur(ex, relectures.findByExerciceId(ex.getId()).orElse(null)))
+                .map(ex -> versAuteur(ex, null))
                 .toList();
     }
 
@@ -181,8 +181,13 @@ public class EspaceController {
 
         if (r.getStatut() == Relecture.Statut.EN_ATTENTE) {
             r.rendre(req.note(), req.commentaire(), OffsetDateTime.now());
-            ex.setStatut(Exercice.Statut.RELU);
-            exercices.save(ex);
+            // Issue #25 : RELU seulement quand TOUS les relecteurs de l'exercice ont rendu.
+            boolean tousRendus = relectures.findAllByExerciceId(ex.getId()).stream()
+                    .allMatch(x -> x.getStatut() == Relecture.Statut.RENDUE);
+            if (tousRendus) {
+                ex.setStatut(Exercice.Statut.RELU);
+                exercices.save(ex);
+            }
         } else {
             r.corriger(req.note(), OffsetDateTime.now());            // EF17 : correction RG16
         }
@@ -203,17 +208,34 @@ public class EspaceController {
                 () -> new BusinessException("ETUDIANT_INCONNU", "Cet etudiant n'existe pas."));
     }
 
-    /** Vue auteur d'un exercice : note/commentaire OK, relecteur JAMAIS expose (RG11/RG20). */
-    private ExerciceAuteurDto versAuteur(Exercice ex, Relecture r) {
+    /** Vue auteur d'un exercice : note/commentaire OK, relecteur JAMAIS expose (RG11/RG20).
+     *  Issue #25 : note = MOYENNE des relectures rendues ; provisoire si une seule sur deux. */
+    private ExerciceAuteurDto versAuteur(Exercice ex, Relecture ignore) {
         SessionCours s = sessions.findById(ex.getSessionId()).orElse(null);
         boolean definitif = s != null && s.isCloturee();              // EF18 : apres cloture
+
+        java.util.List<Relecture> toutes = relectures.findAllByExerciceId(ex.getId());
+        java.util.List<Integer> notes = toutes.stream()
+                .map(Relecture::getNote)
+                .filter(java.util.Objects::nonNull)
+                .toList();
+        Double moyenne = notes.isEmpty() ? null
+                : notes.stream().mapToInt(Integer::intValue).average().orElse(0);
+        // provisoire = au moins une relecture rendue mais pas toutes (2e relecteur manquant)
+        boolean provisoire = !notes.isEmpty() && notes.size() < toutes.size();
+        String commentaire = toutes.stream()
+                .filter(r -> r.getCommentaire() != null && !r.getCommentaire().isBlank())
+                .map(Relecture::getCommentaire)
+                .reduce((a, b) -> a + " | " + b).orElse(null);
+
         return new ExerciceAuteurDto(ex.getId(), ex.getSessionId(),
                 s == null ? "?" : s.getTitre(),
                 s == null ? "OUVERTE" : (s.isCloturee() ? "CLOTUREE" : "OUVERTE"),
                 ex.getLien(), ex.getDeposeAt().toString(), ex.getStatut().name(),
                 ex.getStatut() == Exercice.Statut.EN_ATTENTE_RELECTEUR,      // lienModifiable (7.8)
-                r == null ? null : r.getNote(),
-                r == null ? null : r.getCommentaire(),
-                definitif);
+                moyenne == null ? null : (int) Math.round(moyenne),
+                commentaire,
+                definitif && !provisoire,
+                provisoire);
     }
 }

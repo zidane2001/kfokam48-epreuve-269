@@ -64,25 +64,28 @@ public class ExerciceService {
         }
 
         Exercice ex = exercices.save(new Exercice(req.sessionId(), req.etudiantId(), lienValide, OffsetDateTime.now()));
-        assignerRelecteur(ex);                                           // EF10 : attribue -> RELECTEUR_ATTRIBUE
+        assignerRelecteurs(ex);                                          // EF10 : attribue -> RELECTEUR_ATTRIBUE
 
         return new DepotResponse(ex.getId(), ex.getStatut().name());
     }
 
-    /** EF10/RG9 : relecteur au hasard parmi les presents != depositaire (RG10).
-     *  CDC v2 7.8 : l'attribution EST le debut de la relecture -> RELECTEUR_ATTRIBUE. */
-    private void assignerRelecteur(Exercice ex) {
+    /** EF10/RG9 v2 (issue #25) : DEUX relecteurs distincts au hasard parmi les presents != depositaire (RG10).
+     *  CDC v2 7.8 : l'attribution EST le debut de la relecture -> RELECTEUR_ATTRIBUE.
+     *  Fallback : 1 seul autre present -> 1 relecteur ; aucun -> reste EN_ATTENTE_RELECTEUR. */
+    private void assignerRelecteurs(Exercice ex) {
         List<Long> presents = presences.findBySessionId(ex.getSessionId()).stream()
                 .map(Presence::getEtudiantId)
                 .filter(id -> !id.equals(ex.getEtudiantId()))            // RG10 : jamais soi-meme
-                .toList();
-        if (presents.isEmpty()) {
-            return;                                                      // 7.6 : reste EN_ATTENTE_RELECTEUR
+                .collect(java.util.stream.Collectors.toList());
+        java.util.Collections.shuffle(presents, RNG);
+        int nb = Math.min(2, presents.size());                           // issue #25 : 2 si possible
+        for (int i = 0; i < nb; i++) {
+            relectures.save(new Relecture(ex.getId(), presents.get(i), OffsetDateTime.now()));
         }
-        Long relecteurId = presents.get(RNG.nextInt(presents.size()));
-        relectures.save(new Relecture(ex.getId(), relecteurId, OffsetDateTime.now()));
-        ex.setStatut(Exercice.Statut.RELECTEUR_ATTRIBUE);
-        exercices.save(ex);
+        if (nb > 0) {
+            ex.setStatut(Exercice.Statut.RELECTEUR_ATTRIBUE);
+            exercices.save(ex);
+        }
     }
 
     /** Validation du lien, partagee avec PUT /api/exercices/{id}/lien (EF14). */
