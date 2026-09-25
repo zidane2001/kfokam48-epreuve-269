@@ -246,6 +246,24 @@ Ce Must arrive tard : pour tenir le délai, **sortent du périmètre v1.0** :
 - l'écran de modification du lien (EF14 : l'endpoint PUT reste livré et testé, seul le bouton front est reporté) ;
 - les écrans dédiés aux Should restants (présence manuelle et correction de note restent accessibles par l'API, testées).
 
+### 7.14 Authentification par comptes (évolution décidée par le PO, post-soumission)
+**Contexte** — L'absence de mot de passe était une exigence du client (Q1 : « Ne perdez pas de temps là-dessus »)
+et l'authentification figurait au §3.2 « Exclus ». Après la soumission, le PO a demandé l'ajout de comptes
+utilisateur (« il est normal que sur une plateforme chacun ait ses identifiants pour la sécurité »), notamment
+pour des raisons d'audit.
+
+**Décision** — Ajout d'une authentification indépendante du périmètre imposé :
+- comptes avec **BCrypt** (table `compte`, migration `V6`), tokens **JWT** signés (HS256, `AUTH_SECRET`),
+- rôle **FORMATEUR** (ouvrir/clôturer une session, présences manuelles, tableau) ou **ETUDIANT** ;
+  un étudiant n'agit que sur sa propre identité (présence, dépôt, relectures) — le choix libre d'identité (Q1) disparaît ;
+- l'identité vient du **token**, plus jamais du corps de requête ;
+- option `AUTH_REQUIS=false` : l'API redevient exactement celle du contrat initial (mode correction/démo),
+  les 5 opérations imposées restant inchangées dans les deux modes ;
+- écran `/connexion` ajouté au front ; les 5 opérations imposées du contrat restent inchangées.
+
+**Impact** — Additif documenté ici pour la traçabilité ; les 37 tests du contrat restent verts
+(`auth.requis=false` en tests), 5 nouveaux tests verrouillent le mode authentifié.
+
 ## 8. Contraintes techniques
 
 **Backend** — Java 17 ou supérieur ; Spring Boot ; Maven ; wrapper Maven versionné ; API REST ; séparation Controller / Service / Repository ; DTO ; validation ; @RestControllerAdvice ; migrations Flyway ou Liquibase ; aucun ddl-auto=update hors tests ; tests unitaires ; tests d'intégration.

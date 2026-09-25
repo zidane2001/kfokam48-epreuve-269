@@ -151,6 +151,9 @@ paths:
   /api/tableau:
     get:
       summary: Le tableau récapitulatif du formateur
+      description: |
+        Évolution PO (CDC 7.14) : réservé au compte FORMATEUR quand AUTH_REQUIS=true
+        (header Authorization: Bearer). Sans authentification (mode contrat), inchangé.
       parameters:
         - name: promotionId
           in: query
@@ -174,7 +177,107 @@ paths:
                     exercicesDeposes: { type: integer }
                     moyenne: { type: number, nullable: true }
                     relecturesEnAttente: { type: integer }
+        "403": { $ref: "#/components/responses/Erreur" }   # ACCES_REFUSE (evolution PO)
         "404": { $ref: "#/components/responses/Erreur" }   # PROMOTION_INCONNUE
+
+  /api/suivi:
+    get:
+      summary: Vue riche du tableau de suivi (ajoutée pour le design, hors contrat imposé)
+      description: |
+        Enveloppe { lignes, totaux } : présence/source/statut exercice en périmètre
+        mono-session, moyenne de promotion calculée serveur (F3), moyenne null si
+        aucune note (7.9). Réservée au formateur en mode authentifié (evolution PO).
+      parameters:
+        - name: promotionId
+          in: query
+          required: true
+          schema: { type: integer, format: int64 }
+        - name: sessionId
+          in: query
+          required: false
+          schema: { type: integer, format: int64 }
+      responses:
+        "200":
+          description: Tableau de suivi enrichi
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  promotionId: { type: integer, format: int64 }
+                  sessionId: { type: integer, format: int64, nullable: true }
+                  lignes:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        etudiantId: { type: integer, format: int64 }
+                        nomComplet: { type: string }
+                        presentSession: { type: boolean, nullable: true }
+                        sourcePresence: { type: string, nullable: true }
+                        statutExercice: { type: string, nullable: true }
+                        presences: { type: integer }
+                        sessionsComptees: { type: integer }
+                        exercicesDeposes: { type: integer }
+                        notesRecues: { type: integer }
+                        moyenne: { type: number, nullable: true }
+                        relecturesEnAttente: { type: integer }
+                  totaux:
+                    type: object
+                    properties:
+                      etudiants: { type: integer }
+                      presents: { type: integer, nullable: true }
+                      sessionsComptees: { type: integer }
+                      exercicesDeposes: { type: integer }
+                      relecturesEnAttente: { type: integer }
+                      moyennePromotion: { type: number, nullable: true }
+        "400": { $ref: "#/components/responses/Erreur" }   # SESSION_HORS_PROMOTION
+        "404": { $ref: "#/components/responses/Erreur" }   # PROMOTION_INCONNUE / SESSION_INCONNUE
+
+  /api/auth/login:
+    post:
+      summary: Connexion par identifiants (evolution PO, CDC 7.14)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [login, motDePasse]
+              properties:
+                login: { type: string }
+                motDePasse: { type: string }
+      responses:
+        "200":
+          description: Token JWT + identite
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token: { type: string }
+                  role: { type: string, enum: [ETUDIANT, FORMATEUR] }
+                  etudiantId: { type: integer, format: int64, nullable: true }
+                  promotionId: { type: integer, format: int64, nullable: true }
+                  login: { type: string }
+        "401": { $ref: "#/components/responses/Erreur" }   # IDENTIFIANTS_INVALIDES
+
+  /api/auth/me:
+    get:
+      summary: Identite courante depuis le token (evolution PO)
+      responses:
+        "200":
+          description: Identite du compte connecte
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  login: { type: string }
+                  role: { type: string, enum: [ETUDIANT, FORMATEUR] }
+                  etudiantId: { type: integer, format: int64, nullable: true }
+                  promotionId: { type: integer, format: int64, nullable: true }
+        "401": { $ref: "#/components/responses/Erreur" }   # NON_AUTHENTIFIE
 
   /api/sessions/{id}/cloture:
     post:

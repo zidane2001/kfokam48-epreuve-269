@@ -7,6 +7,7 @@ import com.kfokam48.presence55.exception.BusinessException;
 import com.kfokam48.presence55.repository.*;
 import com.kfokam48.presence55.service.ExerciceService;
 import com.kfokam48.presence55.service.RelectureService;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
@@ -29,11 +30,13 @@ public class EspaceController {
     private final TentativeCodeRepository tentatives;
     private final ExerciceService exerciceService;
     private final RelectureService relectureService;
+    private final AccessGuard guard;
 
     public EspaceController(SessionRepository sessions, EtudiantRepository etudiants,
                             PresenceRepository presences, ExerciceRepository exercices,
                             RelectureRepository relectures, TentativeCodeRepository tentatives,
-                            ExerciceService exerciceService, RelectureService relectureService) {
+                            ExerciceService exerciceService, RelectureService relectureService,
+                            AccessGuard guard) {
         this.sessions = sessions;
         this.etudiants = etudiants;
         this.presences = presences;
@@ -42,6 +45,7 @@ public class EspaceController {
         this.tentatives = tentatives;
         this.exerciceService = exerciceService;
         this.relectureService = relectureService;
+        this.guard = guard;
     }
 
     // ---------- Espace etudiant ----------
@@ -73,11 +77,13 @@ public class EspaceController {
                 .toList();
     }
 
-    /** POST presence manuelle du formateur -> source=FORMATEUR (EF7/RG13). */
+    /** POST presence manuelle du formateur -> source=FORMATEUR (EF7/RG13). Formateur only. */
     @PostMapping("/api/sessions/{sessionId}/presences/manuelle")
     @ResponseStatus(HttpStatus.CREATED)
     public PresenceSessionDto presenceManuelle(@PathVariable Long sessionId,
-                                               @RequestBody AjoutManuelRequest req) {
+                                               @RequestBody AjoutManuelRequest req,
+                                               HttpServletRequest request) {
+        guard.exigerFormateur(request);
         SessionCours s = session(sessionId);
         if (s.isCloturee()) {
             throw new BusinessException("SESSION_CLOTUREE", "Session cloturee : ajout impossible.");
@@ -92,18 +98,24 @@ public class EspaceController {
                 e.getPrenom() + " " + e.getNom(), p.getSource().name(), p.getEnregistreeAt().toString());
     }
 
-    /** POST depot d'exercice pour une session (EF8) — meme contrat que POST /api/exercices. */
+    /** POST depot d'exercice pour une session (EF8) — meme contrat que POST /api/exercices.
+     *  Evolution PO : identite forcée par le token. */
     @PostMapping("/api/sessions/{sessionId}/exercices")
     @ResponseStatus(HttpStatus.CREATED)
     public DepotResponse deposer(@PathVariable Long sessionId,
-                                 @RequestBody DepotSurSessionRequest req) {
+                                 @RequestBody DepotSurSessionRequest req,
+                                 HttpServletRequest request) {
+        Long etudiantId = guard.exigerEtudiantLuimeme(request, req.etudiantId());
         return exerciceService.deposer(new com.kfokam48.presence55.dto.ExerciceDtos.DepotRequest(
-                sessionId, req.etudiantId(), req.lien()));
+                sessionId, etudiantId, req.lien()));
     }
 
-    /** PUT lien d'un exercice (EF14/RG7) : tant que la relecture n'a pas commence. */
+    /** PUT lien d'un exercice (EF14/RG7) : tant que la relecture n'a pas commence.
+     *  Evolution PO : seulement le depositaire (ou le formateur). */
     @PutMapping("/api/exercices/{id}/lien")
-    public ExerciceAuteurDto modifierLien(@PathVariable Long id, @RequestBody ModifierLienRequest req) {
+    public ExerciceAuteurDto modifierLien(@PathVariable Long id, @RequestBody ModifierLienRequest req,
+                                          HttpServletRequest request) {
+        guard.exigerSoimemeOuFormateur(request, req.etudiantId());
         Exercice ex = exercices.findById(id)
                 .orElseThrow(() -> new BusinessException("EXERCICE_INCONNU", "Exercice inconnu."));
         if (!ex.getEtudiantId().equals(req.etudiantId())) {
@@ -120,18 +132,22 @@ public class EspaceController {
         return versAuteur(ex, null);
     }
 
-    /** GET mes exercices, vue auteur : jamais l'identite du relecteur (EF13/RG11/RG20). */
+    /** GET mes exercices, vue auteur : jamais l'identite du relecteur (EF13/RG11/RG20).
+     *  Evolution PO : seulement pour soi-meme ou pour le formateur. */
     @GetMapping("/api/etudiants/{etudiantId}/exercices")
-    public List<ExerciceAuteurDto> mesExercices(@PathVariable Long etudiantId) {
+    public List<ExerciceAuteurDto> mesExercices(@PathVariable Long etudiantId, HttpServletRequest request) {
+        guard.exigerSoimemeOuFormateur(request, etudiantId);
         etudiant(etudiantId);
         return exercices.findByEtudiantId(etudiantId).stream()
                 .map(ex -> versAuteur(ex, null))
                 .toList();
     }
 
-    /** GET relectures assignees a l'etudiant (EF11), avec lien modifiable (RG16/17). */
+    /** GET relectures assignees a l'etudiant (EF11), avec lien modifiable (RG16/17).
+     *  Evolution PO : seulement pour soi-meme ou pour le formateur. */
     @GetMapping("/api/etudiants/{etudiantId}/relectures")
-    public List<RelectureAssigneeDto> mesRelectures(@PathVariable Long etudiantId) {
+    public List<RelectureAssigneeDto> mesRelectures(@PathVariable Long etudiantId, HttpServletRequest request) {
+        guard.exigerSoimemeOuFormateur(request, etudiantId);
         etudiant(etudiantId);
         return relectures.findByRelecteurId(etudiantId).stream()
                 .map(r -> {
@@ -149,10 +165,13 @@ public class EspaceController {
                 .toList();
     }
 
-    /** PUT relecture : rendre (EF11) ou corriger avant cloture (EF17/RG16). */
+    /** PUT relecture : rendre (EF11) ou corriger avant cloture (EF17/RG16).
+     *  Evolution PO : identite forcée par le token. */
     @PutMapping("/api/relectures/{id}")
     public RelectureAssigneeDto soumettreRelecture(@PathVariable Long id,
-                                                   @RequestBody SoumissionRelectureRequest req) {
+                                                   @RequestBody SoumissionRelectureRequest req,
+                                                   HttpServletRequest request) {
+        Long relecteurId = guard.exigerEtudiantLuimeme(request, req.relecteurId());
         Relecture r = relectures.findById(id)
                 .orElseThrow(() -> new BusinessException("RELECTURE_INCONNUE", "Relecture inconnue."));
         Exercice ex = exercices.findById(r.getExerciceId())
@@ -160,7 +179,7 @@ public class EspaceController {
         SessionCours s = sessions.findById(ex.getSessionId())
                 .orElseThrow(() -> new BusinessException("SESSION_INCONNUE", "Session inconnue."));
 
-        if (!r.getRelecteurId().equals(req.relecteurId())) {
+        if (!r.getRelecteurId().equals(relecteurId)) {
             throw new BusinessException("RELECTURE_AUTRE_ETUDIANT",
                     "Cette relecture n'est pas assignee a cet etudiant.");
         }
@@ -192,7 +211,7 @@ public class EspaceController {
             r.corriger(req.note(), OffsetDateTime.now());            // EF17 : correction RG16
         }
         relectures.save(r);
-        return mesRelectures(req.relecteurId()).stream()
+        return mesRelectures(relecteurId, request).stream()
                 .filter(d -> d.id().equals(r.getId())).findFirst().orElseThrow();
     }
 

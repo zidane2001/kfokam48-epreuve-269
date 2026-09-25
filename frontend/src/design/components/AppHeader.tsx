@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { Link, NavLink } from 'react-router-dom';
-import { GraduationCap, LayoutList, Presentation, RotateCcw, UserRound } from 'lucide-react';
+import { Link, NavLink, useNavigate } from 'react-router-dom';
+import { GraduationCap, LayoutList, LogIn, LogOut, Presentation, RotateCcw, UserRound } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from './ui/Button';
 import { cn } from '../utils/cn';
 import { api, toApiError } from '../utils/api';
+import { useAuthSession } from '../auth/authStore';
 
 const links = [
 { to: '/formateur', label: 'Formateur', icon: Presentation },
@@ -14,6 +15,8 @@ const links = [
 
 export function AppHeader() {
   const [resetting, setResetting] = useState(false);
+  const { session, deconnexion } = useAuthSession();
+  const navigate = useNavigate();
 
   async function handleReset() {
     setResetting(true);
@@ -54,6 +57,29 @@ export function AppHeader() {
             </NavLink>
           )}
         </nav>
+        {session ?
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => {
+            deconnexion();
+            navigate('/');
+          }}
+          title={`Déconnexion (${session.login})`}>
+          
+          <LogOut />
+          <span className="hidden sm:inline">{session.login}</span>
+        </Button> :
+
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => navigate('/connexion')}>
+          
+          <LogIn />
+          <span className="hidden sm:inline">Connexion</span>
+        </Button>
+        }
         <Button
           variant="ghost"
           size="icon-sm"

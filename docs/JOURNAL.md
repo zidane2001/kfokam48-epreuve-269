@@ -16,7 +16,9 @@
 **IA :** a écrit correctif, migration et tests ; chaque étape vérifiée par exécution (test rouge sur v0.1, vert après ; V5 appliquée sur Neon sans perte).
 
 ## Étape 4 — Version finale (v1.0)
-*(à venir)*
+**Fait :** phase de correction post-soumission : 3 bugs trouvés en navigation réelle et corrigés (500 sur /api/tableau depuis V5 — findByExerciceId en Optional échouait avec 2 relecteurs ; liens directs 404 sur /suivi /formateur /etudiant — route catch-all Next ; erreur d'hydratation du bouton Clôturer — AlertDialogTrigger du design system sans support asChild). Évolution décidée par le PO : authentification par comptes (BCrypt + JWT, migration V6, rôles FORMATEUR/ETUDIANT, identité forcée par le token, écran /connexion, option AUTH_REQUIS=false pour le mode contrat) — CDC §7.14 ; 5 nouveaux tests d'auth, 42 verts au total. Endpoint riche GET /api/suivi ajouté pour les totaux et moyennes de promotion du design (le contrat /api/tableau reste tel quel).
+**Bloqué :** ~30 min de diagnostic sur le 500 tableau (le handler ne loggeait pas les stack traces — log d'erreur ajouté, ce qui a révélé le bug) ; ~15 min sur les garde-fous MockMvc (drapeau auth.requis pour préserver les 37 tests du contrat).
+**IA :** a diagnostiqué les 3 bugs via logs exécutés (pas à l'œil), écrit les correctifs + tests de régression, implémenté l'auth bout en bout ; chaque étape validée par exécution réelle contre Neon (logins curl, 401/403/200 vérifiés, 42/42 tests H2).
 
 ## Étape 5 — Épreuve Git
 *(à venir)*

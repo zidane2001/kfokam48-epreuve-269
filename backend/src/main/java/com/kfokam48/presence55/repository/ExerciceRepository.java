@@ -8,5 +8,6 @@ public interface ExerciceRepository extends JpaRepository<Exercice, Long> {
     long countByEtudiantId(Long etudiantId);
     long countBySessionId(Long sessionId);
     java.util.List<Exercice> findByEtudiantId(Long etudiantId);
+    java.util.List<Exercice> findBySessionId(Long sessionId);
     java.util.Optional<Exercice> findBySessionIdAndEtudiantId(Long sessionId, Long etudiantId);
 }

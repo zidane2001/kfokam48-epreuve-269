@@ -18,6 +18,26 @@ import type {
 
 export const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080";
 
+/** Token JWT de la session courante (evolution PO : chaque utilisateur a ses identifiants). */
+const TOKEN_KEY = 'kfokam48-jwt';
+
+export function setAuthToken(token: string | null) {
+  try {
+    if (token) window.localStorage.setItem(TOKEN_KEY, token);
+    else window.localStorage.removeItem(TOKEN_KEY);
+  } catch {
+    // stockage indisponible : session memoire
+  }
+}
+
+export function getAuthToken(): string | null {
+  try {
+    return window.localStorage.getItem(TOKEN_KEY);
+  } catch {
+    return null;
+  }
+}
+
 export class ApiError extends Error {
   constructor(
   readonly status: number,
@@ -31,9 +51,13 @@ export class ApiError extends Error {
 type Method = 'GET' | 'POST' | 'PUT';
 
 async function transport(method: Method, path: string, body?: unknown): Promise<{status: number;body: unknown;}> {
+  const token = getAuthToken();
+  const headers: Record<string, string> = {};
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+  if (body !== undefined) headers['Content-Type'] = 'application/json';
   const reponse = await fetch(`${API_BASE}${path}`, {
     method,
-    headers: body === undefined ? undefined : { 'Content-Type': 'application/json' },
+    headers,
     body: body === undefined ? undefined : JSON.stringify(body),
   });
   let corps: unknown = undefined;
@@ -73,6 +97,23 @@ const splitNom = (nomComplet: string): { prenom: string; nom: string } => {
 };
 
 export const api = {
+  /** Evolution PO : connexion par identifiants, token JWT stocke localement. */
+  connexion: (login: string, motDePasse: string) =>
+    request<{ token: string; role: 'ETUDIANT' | 'FORMATEUR'; etudiantId: number | null; promotionId: number | null; login: string }>(
+      'POST', '/api/auth/login', { login, motDePasse }),
+
+  deconnexion: () => {
+    setAuthToken(null);
+    try {
+      window.localStorage.removeItem('kfokam48-identite-etudiant');
+    } catch {
+      // rien a nettoyer
+    }
+  },
+
+  whoAmI: () =>
+    request<{ login: string; role: 'ETUDIANT' | 'FORMATEUR'; etudiantId: number | null; promotionId: number | null }>(
+      'GET', '/api/auth/me'),
   listerPromotions: async () => {
     const promotions = await request<{ id: number; nom: string; etudiants: { id: number; nom: string }[] }[]>('GET', '/api/promotions');
     return promotions.map(p => ({
@@ -218,7 +259,7 @@ export const api = {
 
   obtenirSuivi: (promotionId: string, sessionId?: string) =>
     request<{ promotionId: number; sessionId: number | null; lignes: { etudiantId: number; nomComplet: string; presentSession: boolean | null; sourcePresence: string | null; statutExercice: string | null; presences: number; sessionsComptees: number; exercicesDeposes: number; notesRecues: number; moyenne: number | null; relecturesEnAttente: number }[]; totaux: { etudiants: number; presents: number | null; sessionsComptees: number; exercicesDeposes: number; relecturesEnAttente: number; moyennePromotion: number | null } }>(
-      'GET', `/api/tableau?promotionId=${promotionId}${sessionId ? `&sessionId=${sessionId}` : ''}`)
+      'GET', `/api/suivi?promotionId=${promotionId}${sessionId ? `&sessionId=${sessionId}` : ''}`)
       .then(suivi => ({
         promotionId: String(suivi.promotionId),
         sessionId: suivi.sessionId == null ? null : String(suivi.sessionId),

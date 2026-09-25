@@ -18,6 +18,19 @@ cd frontend && npm install && npm run dev
 
 Ouvrir http://localhost:3000 — des **données de démonstration** (1 promotion, 8 étudiants) sont chargées automatiquement si la base est vide.
 
+### Connexion (évolution décidée par le PO)
+
+Chaque utilisateur dispose de ses identifiants (tokens JWT, mots de passe hachés BCrypt) :
+
+| Rôle | Login | Mot de passe initial |
+|---|---|---|
+| Formateur | `formateur` | `formateur` |
+| Étudiant | `prenom.nom` (ex. `yannick.tchoupo`) | identique au login |
+
+- Les espaces **Formateur** et **Suivi** sont réservés au compte formateur ; l'espace **Étudiant** au compte étudiant connecté.
+- Un étudiant ne peut agir **que sur sa propre identité** (présence, dépôt, relectures) — l'identité ne se choisit plus dans une liste.
+- Variables optionnelles : `AUTH_SECRET` (clé de signature JWT, 32+ caractères) et `AUTH_REQUIS=false` pour désactiver l'authentification (mode contrat du sujet, démo/correction).
+
 ### Configuration de la base
 
 Le backend lit les variables d'environnement (valeurs par défaut : PostgreSQL local) :
@@ -28,12 +41,12 @@ export DATABASE_USER="postgres"
 export DATABASE_PASSWORD="postgres"
 ```
 
-Le schéma est versionné par **Flyway** (migrations `V1`→`V4` appliquées au démarrage).
+Le schéma est versionné par **Flyway** (migrations `V1`→`V6` appliquées au démarrage).
 
 ## Tests
 
 ```bash
-cd backend && ./mvnw test     # 29 tests (H2 mémoire, aucune base requise)
+cd backend && ./mvnw test     # 42 tests (H2 mémoire, aucune base requise)
 cd frontend && npm run build  # build de production
 ```
 

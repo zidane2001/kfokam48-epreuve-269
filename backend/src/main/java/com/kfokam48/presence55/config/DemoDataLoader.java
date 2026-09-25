@@ -1,6 +1,7 @@
 package com.kfokam48.presence55.config;
 
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.core.annotation.Order;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 
@@ -10,6 +11,7 @@ import org.springframework.stereotype.Component;
  * Idempotent : ne fait rien si une promotion existe deja.
  */
 @Component
+@Order(1) // avant ComptesInitializer (@Order(2)) : les comptes ont besoin des etudiants
 public class DemoDataLoader implements CommandLineRunner {
 
     private final JdbcTemplate jdbc;

@@ -49,6 +49,8 @@ public class GlobalExceptionHandler {
 
     private HttpStatus mapStatut(String code) {
         return switch (code) {
+            case "NON_AUTHENTIFIE", "IDENTIFIANTS_INVALIDES" -> HttpStatus.UNAUTHORIZED; // 401 (evolution PO)
+            case "ACCES_REFUSE" -> HttpStatus.FORBIDDEN;             // 403 (evolution PO)
             case "CODE_EXPIRE" -> HttpStatus.GONE;                    // 410
             case "DEJA_PRESENT", "EXERCICE_DEJA_DEPOSE",
                  "RELECTURE_DEJA_RENDUE", "SESSION_DEJA_CLOTUREE",
