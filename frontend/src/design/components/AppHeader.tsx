@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
-import { GraduationCap, LayoutList, LogIn, LogOut, Presentation, RotateCcw, UserRound } from 'lucide-react';
+import { GraduationCap, LayoutList, LogIn, LogOut, Presentation, RotateCcw, Settings2, UserRound } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from './ui/Button';
 import { cn } from '../utils/cn';
@@ -10,7 +10,8 @@ import { useAuthSession } from '../auth/authStore';
 const links = [
 { to: '/formateur', label: 'Formateur', icon: Presentation },
 { to: '/etudiant', label: 'Étudiant', icon: UserRound },
-{ to: '/suivi', label: 'Suivi', icon: LayoutList }];
+{ to: '/suivi', label: 'Suivi', icon: LayoutList },
+{ to: '/gestion', label: 'Gestion', icon: Settings2 }];
 
 
 export function AppHeader() {

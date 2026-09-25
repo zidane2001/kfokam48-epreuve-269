@@ -3,12 +3,19 @@ import { Navigate, useLocation } from 'react-router-dom';
 import { PageHeader } from '../components/PageHeader';
 import { EmptyState } from '../components/feedback/EmptyState';
 import { Lock } from 'lucide-react';
-import { useAuthSession, type Role } from './authStore';
+import { useAuthSession, authRequise, type Role } from './authStore';
 
-/** Garde de route (evolution PO) : connexion requise, role optionnel impose. */
+/**
+ * Garde de route (evolution PO) : connexion requise, role optionnel impose.
+ * Mode AUTH_REQUIS=false (contrat du sujet) : aucune garde, tout est accessible.
+ */
 export function ExigeConnexion({ role, children }: { role?: Role; children: React.ReactNode }) {
   const { session, initialisation } = useAuthSession();
   const location = useLocation();
+
+  if (!authRequise()) {
+    return <>{children}</>;
+  }
 
   if (initialisation) {
     return <div className="py-16 text-center text-sm text-muted-foreground" role="status">Chargement…</div>;

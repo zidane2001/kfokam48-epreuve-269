@@ -19,6 +19,8 @@ public class AccessGuard {
 
     public record Identite(Compte compte, String role, Long etudiantId) { }
 
+    // NB : requete non authentifiee en mode PO -> 401 (NON_AUTHENTIFIE) ;
+    // requete authentifiee mais mauvais role -> 403 (ACCES_REFUSE).
     private final boolean requis;
 
     public AccessGuard(@Value("${auth.requis:true}") boolean requis) {
@@ -47,6 +49,9 @@ public class AccessGuard {
         if (!requis) {
             return id;
         }
+        if (id.compte() == null) {
+            throw new BusinessException("NON_AUTHENTIFIE", "Connexion requise.");
+        }
         if (!"FORMATEUR".equals(id.role())) {
             throw new BusinessException("ACCES_REFUSE", "Action reservee au formateur.");
         }
@@ -57,6 +62,9 @@ public class AccessGuard {
         Identite id = identite(request);
         if (!requis) {
             return id;
+        }
+        if (id.compte() == null) {
+            throw new BusinessException("NON_AUTHENTIFIE", "Connexion requise.");
         }
         if (!"ETUDIANT".equals(id.role()) || id.etudiantId() == null) {
             throw new BusinessException("ACCES_REFUSE", "Action reservee a un etudiant connecte.");
@@ -82,6 +90,9 @@ public class AccessGuard {
             return;
         }
         Identite id = identite(request);
+        if (id.compte() == null) {
+            throw new BusinessException("NON_AUTHENTIFIE", "Connexion requise.");
+        }
         if ("FORMATEUR".equals(id.role())) {
             return;
         }

@@ -31,7 +31,7 @@ public class AuthFilter extends OncePerRequestFilter {
     public static final String ATTRIBUT_ETUDIANT = "auth.etudiantId";
 
     private static final List<String> PUBLICS = List.of(
-            "/api/auth/login", "/api/auth/me",
+            "/api/auth/login", "/api/auth/me", "/api/auth/mode",
             "/api/promotions", "/api/sessions",
             "/api/presences", "/api/exercices", "/api/relectures", "/api/relectures-a-faire",
             "/api/tableau", "/api/suivi");

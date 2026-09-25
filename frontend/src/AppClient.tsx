@@ -6,6 +6,7 @@ import { Connexion } from './design/auth/Connexion';
 import { ExigeConnexion } from './design/auth/ExigeConnexion';
 import { Etudiant } from './design/pages/Etudiant';
 import { Formateur } from './design/pages/Formateur';
+import { Gestion } from './design/pages/Gestion';
 import { Home } from './design/pages/Home';
 import { Suivi } from './design/pages/Suivi';
 
@@ -25,6 +26,8 @@ export function App() {
               <ExigeConnexion role="ETUDIANT"><Etudiant /></ExigeConnexion>} />
             <Route path="/suivi" element={
               <ExigeConnexion role="FORMATEUR"><Suivi /></ExigeConnexion>} />
+            <Route path="/gestion" element={
+              <ExigeConnexion role="FORMATEUR"><Gestion /></ExigeConnexion>} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </main>

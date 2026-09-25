@@ -114,6 +114,18 @@ export const api = {
   whoAmI: () =>
     request<{ login: string; role: 'ETUDIANT' | 'FORMATEUR'; etudiantId: number | null; promotionId: number | null }>(
       'GET', '/api/auth/me'),
+
+  /** Mode d'authentification du backend (evolution PO). */
+  modeAuth: () =>
+    request<{ authRequise: boolean }>('GET', '/api/auth/mode'),
+
+  /** Gestion des promotions et etudiants (evolution PO, formateur). */
+  creerPromotion: (nom: string) =>
+    request<{ id: number; nom: string }>('POST', '/api/promotions', { nom }),
+
+  inscrireEtudiant: (promotionId: string, prenom: string, nom: string) =>
+    request<{ id: number; prenom: string; nom: string; promotionId: number; login: string }>(
+      'POST', `/api/etudiants?promotionId=${promotionId}`, { prenom, nom }),
   listerPromotions: async () => {
     const promotions = await request<{ id: number; nom: string; etudiants: { id: number; nom: string }[] }[]>('GET', '/api/promotions');
     return promotions.map(p => ({

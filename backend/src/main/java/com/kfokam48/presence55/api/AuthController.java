@@ -4,6 +4,7 @@ import com.kfokam48.presence55.domain.Compte;
 import com.kfokam48.presence55.repository.EtudiantRepository;
 import com.kfokam48.presence55.service.AuthService;
 import com.kfokam48.presence55.service.TokenService;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.*;
 
 /** POST /api/auth/login — echange login/mot de passe contre un JWT (evolution PO). */
@@ -43,6 +44,14 @@ public class AuthController {
         return new MeResponse(compte.getLogin(), compte.getRole().name(),
                 compte.getEtudiantId(), promotionDe(compte));
     }
+
+    /** GET /api/auth/mode — indique si l'authentification est active (evolution PO). */
+    @GetMapping("/mode")
+    public ModeResponse mode(@Value("${auth.requis:true}") boolean requis) {
+        return new ModeResponse(requis);
+    }
+
+    public record ModeResponse(boolean authRequise) { }
 
     private Long promotionDe(Compte compte) {
         return compte.getEtudiantId() == null ? null

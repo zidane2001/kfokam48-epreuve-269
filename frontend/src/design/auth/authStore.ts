@@ -49,11 +49,32 @@ function setEtat(partiel: Partial<EtatAuth>) {
   abonnes.forEach((l) => l());
 }
 
+// Mode du backend : AUTH_REQUIS=false (contrat du sujet) -> gardes front levees.
+let modeSansAuth = false;
+export function authRequise(): boolean {
+  return !modeSansAuth;
+}
+
 // Revalidation unique du token au chargement du module (SPA 100% client).
 let demarre = false;
 function demarrer() {
   if (demarre) return;
   demarre = true;
+  api.modeAuth()
+    .then((m) => {
+      modeSansAuth = !m.authRequise;
+      setEtat({}); // notifie les abonnes apres resolution du mode
+      if (!modeSansAuth && !getAuthToken()) {
+        setEtat({ session: null, initialisation: false });
+        return;
+      }
+      if (!getAuthToken()) return;
+      revalider();
+    })
+    .catch(() => setEtat({ initialisation: false }));
+}
+
+function revalider() {
   if (!getAuthToken()) {
     setEtat({ session: null, initialisation: false });
     return;
