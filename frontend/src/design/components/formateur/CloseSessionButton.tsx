@@ -9,8 +9,7 @@ import {
   AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger } from
+  AlertDialogTitle } from
 '../ui/AlertDialog';
 import { Button } from '../ui/Button';
 import { Spinner } from '../ui/Spinner';
@@ -19,12 +18,14 @@ import type { SessionDto } from '../../types/domain';
 
 export function CloseSessionButton({ session }: {session: SessionDto;}) {
   const [closing, setClosing] = useState(false);
+  const [open, setOpen] = useState(false);
 
   async function handleClose() {
     setClosing(true);
     try {
       await api.cloturerSession(session.id);
       toast.success('Session clôturée');
+      setOpen(false);
     } catch (e) {
       toast.error(toApiError(e).message);
     } finally {
@@ -33,13 +34,14 @@ export function CloseSessionButton({ session }: {session: SessionDto;}) {
   }
 
   return (
-    <AlertDialog>
-      <AlertDialogTrigger asChild>
-        <Button variant="destructive" disabled={closing}>
-          {closing ? <Spinner /> : <Lock />}
-          Clôturer
-        </Button>
-      </AlertDialogTrigger>
+    <AlertDialog open={open} onOpenChange={setOpen}>
+      {/* NB: le design system embarque un AlertDialogTrigger sans support asChild,
+          qui rend un <button> dans le <button> (erreur d'hydratation).
+          Le Button sert donc de declencheur direct, le dialogue est controle. */}
+      <Button variant="destructive" disabled={closing} onClick={() => setOpen(true)}>
+        {closing ? <Spinner /> : <Lock />}
+        Clôturer
+      </Button>
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>Clôturer « {session.titre} » ?</AlertDialogTitle>
