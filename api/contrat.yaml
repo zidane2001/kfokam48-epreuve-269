@@ -381,6 +381,43 @@ paths:
         "403": { $ref: "#/components/responses/Erreur" }   # ACCES_REFUSE
         "404": { $ref: "#/components/responses/Erreur" }   # PROMOTION_INCONNUE
 
+  /api/etudiants/{id}:
+    delete:
+      summary: Supprimer un etudiant sans participation (evolution PO, closes #30)
+      description: |
+        Formateur uniquement. Le compte de connexion est detruit avec l etudiant.
+        409 ETUDIANT_A_DEJA_PARTICIPE si l etudiant a une presence, un exercice
+        ou une relecture : l historique pedagogique est preserve.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer, format: int64 }
+      responses:
+        "204": { description: Etudiant supprime }
+        "401": { $ref: "#/components/responses/Erreur" }   # NON_AUTHENTIFIE
+        "403": { $ref: "#/components/responses/Erreur" }   # ACCES_REFUSE
+        "404": { $ref: "#/components/responses/Erreur" }   # ETUDIANT_INCONNU
+        "409": { $ref: "#/components/responses/Erreur" }   # ETUDIANT_A_DEJA_PARTICIPE
+
+  /api/promotions/{id}:
+    delete:
+      summary: Supprimer une promotion vide (evolution PO, closes #30)
+      description: |
+        Formateur uniquement. 409 PROMOTION_NON_VIDE si des etudiants existent
+        encore, 409 PROMOTION_A_DEJA_SESSION si des sessions sont rattachees.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer, format: int64 }
+      responses:
+        "204": { description: Promotion supprimee }
+        "401": { $ref: "#/components/responses/Erreur" }   # NON_AUTHENTIFIE
+        "403": { $ref: "#/components/responses/Erreur" }   # ACCES_REFUSE
+        "404": { $ref: "#/components/responses/Erreur" }   # PROMOTION_INCONNUE
+        "409": { $ref: "#/components/responses/Erreur" }   # PROMOTION_NON_VIDE / PROMOTION_A_DEJA_SESSION
+
   /api/sessions/{id}/cloture:
     post:
       summary: Le formateur clôture la session (EF11)

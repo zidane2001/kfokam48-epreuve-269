@@ -24,6 +24,8 @@ graph LR
       UC14([Se connecter avec ses identifiants])
       UC15([Créer une promotion])
       UC16([Inscrire un étudiant → compte auto])
+      UC17([Supprimer un étudiant sans participation])
+      UC18([Supprimer une promotion vide])
     end
 
     utilisateur --> UC14
@@ -33,6 +35,8 @@ graph LR
     formateur --> UC4
     formateur --> UC15
     formateur --> UC16
+    formateur --> UC17
+    formateur --> UC18
     etudiant --> UC5
     etudiant --> UC6
     etudiant --> UC7
@@ -48,5 +52,6 @@ graph LR
 
 **Évolutions post-soumission (CDC 7.14/7.15)** : UC14 connexion par comptes (BCrypt + JWT, rôle
 FORMATEUR ou ETUDIANT, identité portée par le token) ; UC15/UC16 gestion des promotions et des
-étudiants, réservées au formateur. En mode `AUTH_REQUIS=false` (contrat initial, Q1), UC14
+étudiants, UC17/UC18 suppressions gardées (409 si participation ou promotion non vide), réservées
+au formateur. En mode `AUTH_REQUIS=false` (contrat initial, Q1), UC14
 disparaît : l'étudiant choisit librement son nom dans la liste.

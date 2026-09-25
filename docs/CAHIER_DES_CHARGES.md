@@ -279,8 +279,15 @@ d'inscrire des étudiants : le jeu de démonstration était le seul moyen d'obte
 - EF19/EF20 ajoutées au tableau des exigences (Should, évolution), cas d'usage ajoutés à D1, entité COMPTE à D2.
 
 **API ajoutée** — `POST /api/promotions`, `POST /api/etudiants?promotionId=`,
-`GET /api/promotions/{id}/etudiants` (formateur uniquement) ; `GET /api/auth/mode` (public) permet au front de
-savoir si l'authentification est active.
+`GET /api/promotions/{id}/etudiants`, `DELETE /api/etudiants/{id}`, `DELETE /api/promotions/{id}`
+(formateur uniquement) ; `GET /api/auth/mode` (public) permet au front de savoir si l'authentification est active.
+
+**Suppression (closes #30)** — Pour préserver l'historique pédagogique :
+- un étudiant n'est supprimable que s'il n'a **aucune participation** (présence, exercice ou relecture) :
+  sinon **409 `ETUDIANT_A_DEJA_PARTICIPE`** ; son compte de connexion est détruit avec lui ;
+- une promotion n'est supprimable que si elle est **vide** (aucun étudiant : 409 `PROMOTION_NON_VIDE`)
+  et sans session (409 `PROMOTION_A_DEJA_SESSION`) ;
+- les deux suppressions demandent une confirmation dans l'écran Gestion.
 
 ## 8. Contraintes techniques
 
