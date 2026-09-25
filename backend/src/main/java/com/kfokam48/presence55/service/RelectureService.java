@@ -56,6 +56,10 @@ public class RelectureService {
             throw new BusinessException("NOTE_INVALIDE",
                     "La note doit etre un entier entre 0 et 20.");
         }
+        if (req.commentaire() == null || req.commentaire().isBlank()) {  // CDC v2 7.11 -> 400
+            throw new BusinessException("COMMENTAIRE_MANQUANT",
+                    "Un commentaire pedagogique accompagne obligatoirement la note.");
+        }
 
         r.rendre(req.note(), req.commentaire(), OffsetDateTime.now());
         ex.setStatut(Exercice.Statut.RELU);                              // D4 : EN_ATTENTE -> RELU
