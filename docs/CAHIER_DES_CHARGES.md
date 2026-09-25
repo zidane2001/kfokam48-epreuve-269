@@ -1,79 +1,283 @@
-# Cahier des charges — Presence55
+# Cahier des charges — Plateforme de gestion des sessions, présences et relectures
 
-Auteur : KF48-...-269 (zidane2001) · Version 1 · Frontend choisi : **Next.js**, parce que le sujet l'autorise explicitement et qu'il fournit en un seul projet le serveur de développement, le routage par dossiers et le build `next build` documenté dans le README ; aucun rendu serveur de données n'est requis, Next.js est utilisé ici comme framework React.
+Auteur : KF48-...-269 (zidane2001) · Version : 2.0 (remplace la v1, décision du PO) · Frontend choisi : React (via Next.js) — pour permettre une interface web simple, responsive et adaptée aux trois espaces fonctionnels demandés.
 
 ## 1. Contexte et objectif
-La direction de la formation KFOKAM48 gère les sessions de cours avec un tableur : appel manuel, collecte des liens d'exercices par messagerie, relectures par les pairs non traçables, tableau de suivi reconstruit à la main. L'application remplace ce fonctionnement par un flux en ligne : le formateur ouvre une session et reçoit un code de présence, les étudiants marquent leur présence avec ce code, déposent le lien de leur exercice, un pair assigné note l'exercice, et le formateur suit tout dans un tableau récapitulatif.
+
+### 1.1 Contexte
+La direction de la formation KFOKAM48 souhaite disposer d'une application web permettant de gérer le suivi des étudiants pendant les sessions de cours.
+Le besoin couvre cinq fonctions principales :
+- le formateur ouvre une session et obtient un code de présence ;
+- l'étudiant utilise ce code pour enregistrer sa présence ;
+- l'étudiant dépose le lien de son exercice ;
+- le système attribue un exercice à relire à un autre étudiant présent ;
+- le formateur dispose d'un tableau de suivi des étudiants.
+
+L'application doit également gérer les règles métier liées à l'expiration du code, aux tentatives incorrectes, à l'attribution des relectures, aux notes et à la clôture des sessions.
+
+### 1.2 Objectif
+L'objectif est de fournir une application web permettant :
+- au formateur de gérer ses sessions ;
+- aux étudiants d'enregistrer leur présence ;
+- aux étudiants de déposer leurs exercices ;
+- au système d'organiser automatiquement les relectures ;
+- aux étudiants de noter et commenter les exercices qui leur sont attribués ;
+- aux auteurs d'exercices de consulter leur note et leur commentaire ;
+- au formateur de suivre l'activité de chaque étudiant.
+
+L'application doit rester simple d'utilisation et exploitable depuis un ordinateur comme depuis un téléphone.
 
 ## 2. Acteurs et rôles
+
 | Acteur | Ce qu'il peut faire |
 |---|---|
-| Formateur | Ouvrir une session (→ code de présence), clôturer une session, ajouter une présence à la main (marquée « ajouté par le formateur »), consulter le tableau : présences, exercices déposés, moyennes, relectures en attente |
-| Étudiant | Choisir son nom dans une liste (pas de mot de passe, Q1), marquer sa présence avec le code, déposer/remplacer le lien de son exercice, voir sa note et son commentaire (sans le nom du relecteur, Q8), faire les relectures qui lui sont assignées |
-| Relecteur (étudiant assigné) | Noter (0–20 entier) et commenter l'exercice d'un pair, corriger sa note tant que le formateur n'a pas clôturé (Q10) |
-| Système | Assigner le relecteur au hasard parmi les présents (Q7), faire expirer le code à H+15 (Q2), bloquer 2 min après 5 codes erronés (Q4) |
+| Formateur | Ouvrir une session |
+| Formateur | Consulter le code et les informations de la session |
+| Formateur | Clôturer une session |
+| Formateur | Ajouter manuellement une présence |
+| Formateur | Consulter le tableau de suivi |
+| Étudiant | Choisir son identité dans la liste proposée |
+| Étudiant | Saisir un code de présence |
+| Étudiant | Déposer le lien de son exercice |
+| Étudiant | Modifier le lien sous les conditions prévues |
+| Étudiant | Consulter la note et le commentaire reçus |
+| Étudiant | Réaliser une relecture attribuée |
+| Système | Générer le code de présence |
+| Système | Vérifier l'expiration du code |
+| Système | Bloquer temporairement un étudiant après trop d'erreurs |
+| Système | Attribuer aléatoirement les relectures |
+| Système | Empêcher l'auto-relecture |
+
+Aucun système de mot de passe n'est prévu pour l'étudiant. L'identification de l'étudiant se fait par sélection de son nom dans une liste, conformément à Q1.
 
 ## 3. Périmètre
-**Inclus :** annuaire des promotions et étudiants ; sessions avec code de présence expirant ; présences étudiant et formateur (source ETUDIANT/FORMATEUR) ; dépôt et remplacement du lien d'exercice ; assignation aléatoire d'un relecteur parmi les présents ; relecture notée /20 entier avec commentaire ; correction de note avant clôture ; clôture de session par le formateur ; tableau récapitulatif par promotion ; blocage 2 min après 5 échecs de code ; données de démonstration au démarrage.
-**Exclu :** authentification et mot de passe (Q1) ; notifications email/push ; import de listes d'étudiants par fichier ; application mobile native ; archivage multi-années ; tout calcul de moyenne côté frontend (F3).
+
+### 3.1 Inclus
+Le projet comprend :
+- gestion des promotions nécessaires au fonctionnement ;
+- gestion des étudiants nécessaires au fonctionnement ;
+- ouverture d'une session ;
+- génération d'un code de présence ;
+- expiration du code après 15 minutes ;
+- enregistrement d'une présence ;
+- contrôle des doubles présences ;
+- blocage temporaire après cinq erreurs ;
+- ajout manuel d'une présence par le formateur ;
+- distinction entre présence étudiant et présence formateur ;
+- dépôt d'un exercice ;
+- validation du lien ;
+- modification du lien sous conditions ;
+- attribution automatique d'un relecteur ;
+- interdiction de l'auto-relecture ;
+- notation de 0 à 20 ;
+- commentaire ;
+- consultation de la note et du commentaire ;
+- suivi des relectures en attente ;
+- clôture d'une session ;
+- tableau de suivi du formateur ;
+- API REST ;
+- interface web responsive ;
+- données de démonstration ;
+- tests unitaires et d'intégration ;
+- documentation d'installation.
+
+### 3.2 Exclus
+Les éléments suivants ne font pas partie du périmètre initial :
+- authentification par mot de passe ;
+- inscription publique des étudiants ;
+- paiement ;
+- messagerie ;
+- notifications SMS ;
+- notifications email ;
+- application mobile native Android/iOS ;
+- dépôt physique de fichiers ;
+- système complet d'administration des utilisateurs ;
+- gestion avancée des droits et rôles ;
+- correction automatique des exercices.
 
 ## 4. Exigences fonctionnelles
+
 | Réf | Exigence | Critère d'acceptation | Priorité |
 |---|---|---|---|
-| EF1 | Le formateur ouvre une session et obtient un code de présence | `POST /api/sessions` → `201 { id, code, ouvertureAt, expirationAt }` avec `expirationAt = ouvertureAt + 15 min` ; titre ou promotionId manquant → 400 | Must |
-| EF2 | L'étudiant marque sa présence avec le code | Code valide → présence dans le tableau ; code inconnu → 400 `CODE_INCONNU` ; déjà présent → 409 `DEJA_PRESENT` ; code expiré → 410 `CODE_EXPIRE` | Must |
-| EF3 | Le système assigne un relecteur au hasard parmi les présents | Au dépôt de l'exercice, un présent ≠ déposant est assigné (RG2, RG3) ; si aucun autre présent, l'exercice reste « EN_ATTENTE » et apparaît dans le tableau (Q11) | Must |
-| EF4 | L'étudiant dépose le lien de son exercice pour une session | `POST /api/exercices` → `201 { id, statut }` ; lien invalide → 400 `LIEN_INVALIDE` ; second dépôt → 409 `EXERCICE_DEJA_DEPOSE` | Must |
-| EF5 | Le relecteur note et commente l'exercice d'un pair | `POST /api/relectures/{id}` → `200` ; note hors 0–20 ou non entière → 400 ; exercice de l'étudiant lui-même → 403 `AUTO_RELECTURE` ; déjà rendue → 409 `RELECTURE_DEJA_RENDUE` | Must |
-| EF6 | Le relecteur peut corriger sa note tant que la session n'est pas clôturée | `PUT /api/relectures/{id}` → `200` ; après clôture → 409 `SESSION_CLOTUREE` | Should |
-| EF7 | Le formateur voit le tableau par promotion | `GET /api/tableau?promotionId=` → `200 [ { etudiantId, nom, presences, exercicesDeposes, moyenne, relecturesEnAttente } ]` ; promotion inconnue → 404 | Must |
-| EF8 | Le formateur ajoute une présence à la main | La présence créée porte `source: FORMATEUR` et apparaît comme « ajouté par le formateur » (Q14) | Should |
-| EF9 | L'étudiant relu voit sa note et son commentaire, sans le nom du relecteur | `GET /api/etudiants/{id}/relectures-recues` expose note + commentaire, jamais le relecteurId (Q8) | Should |
-| EF10 | L'étudiant remplace le lien de son exercice tant que personne n'a commencé à le relire | `PUT /api/exercices/{id}` → `200` ; relecture commencée → 409 `RELECTURE_COMMENCEE` (Q13) | Could |
-| EF11 | Le formateur clôture la session | `POST /api/sessions/{id}/cloture` → `200` ; après clôture : plus de correction de note (Q10/Q15), dépôt d'exercice refusé (Q12) | Should |
-| EF12 | Blocage après 5 codes erronés | Au 5e code erroné d'un étudiant sur une session, toute nouvelle tentative → 429 `TROP_DE_TENTATIVES` pendant 2 minutes (Q4) | Should |
+| EF1 | Le formateur peut ouvrir une session | Quand le titre et la promotion sont valides, une session est créée et un code est retourné | Must |
+| EF2 | Le système génère une expiration | Lors de l'ouverture, expirationAt correspond à 15 minutes après ouvertureAt | Must |
+| EF3 | L'étudiant peut marquer sa présence | Quand le code est valide et non expiré, une présence est créée | Must |
+| EF4 | Le système refuse un code expiré | Quand le code est expiré, l'API retourne 410 CODE_EXPIRE | Must |
+| EF5 | Le système empêche une double présence | Quand l'étudiant est déjà présent, l'API retourne 409 DEJA_PRESENT | Must |
+| EF6 | Le système limite les tentatives incorrectes | Après cinq erreurs, l'étudiant ne peut plus tenter de code pendant deux minutes | Must |
+| EF7 | Le formateur peut ajouter une présence | Une présence ajoutée manuellement possède source = FORMATEUR | Must |
+| EF8 | L'étudiant peut déposer un exercice | Quand le lien est valide et aucun exercice n'est déjà déposé pour cette session, l'exercice est créé | Must |
+| EF9 | Le système empêche un double dépôt | Un second dépôt pour le même étudiant et la même session retourne 409 | Must |
+| EF10 | Le système attribue une relecture | Lorsqu'un exercice peut être relu, un étudiant présent autre que son auteur est sélectionné aléatoirement | Must |
+| EF11 | L'étudiant peut réaliser une relecture | Le relecteur peut envoyer une note entière comprise entre 0 et 20 et un commentaire | Must |
+| EF12 | L'auto-relecture est interdite | Si le relecteur est l'auteur de l'exercice, l'API retourne 403 | Must |
+| EF13 | L'auteur peut consulter son résultat | L'auteur voit la note et le commentaire mais jamais l'identité du relecteur | Must |
+| EF14 | L'étudiant peut modifier son lien sous condition | Le lien peut être remplacé tant que la relecture n'a pas commencé | Must |
+| EF15 | Le formateur peut clôturer une session | Une session clôturée n'accepte plus les opérations qui dépendent de son ouverture | Must |
+| EF16 | Le formateur peut consulter le tableau | Le tableau présente pour chaque étudiant sa présence, ses exercices déposés, sa moyenne et ses relectures en attente | Must |
+| EF17 | Une relecture peut être modifiée avant clôture | Une relecture déjà envoyée reste modifiable jusqu'à la clôture de la session | Must |
+| EF18 | Une relecture devient définitive après clôture | Après clôture de la session, aucune modification de la relecture n'est possible | Must |
 
 ## 5. Exigences non fonctionnelles
-| Réf | Exigence | Comment on la vérifie |
+
+| Réf | Exigence | Vérification |
 |---|---|---|
-| RNF1 | Expiration du code exacte à ouverture + 15 min | Test d'intégration : présence acceptée à +14:59, refusée 410 à +15:01 |
-| RNF2 | Temps de réponse < 500 ms sur les 5 opérations du contrat | Vérification manuelle locale ; volumétrie cible faible (≈ 50 étudiants/promotion), aucun cache requis |
-| RNF3 | Écrans étudiant et relecteur utilisables sur mobile | Test manuel viewport 375 px : saisie du code et dépôt du lien sans scroll horizontal |
-| RNF4 | Démarrage chez un tiers en 3 commandes max ou `docker compose up` | Test depuis un clone vierge : backend `./mvnw spring-boot:run`, frontend `npm install && npm run dev`, données de démo chargées au démarrage |
-| RNF5 | Aucune stack trace renvoyée au client | Test d'intégration : toute erreur → `{ code, message }` uniquement (B4) |
+| ENF1 | Le backend doit utiliser Java 17 ou plus avec Maven | java -version et build Maven |
+| ENF2 | Le wrapper Maven doit être versionné | Présence de mvnw et mvnw.cmd |
+| ENF3 | L'API doit respecter le contrat imposé | Tests HTTP des cinq opérations obligatoires |
+| ENF4 | L'application doit séparer contrôleur, service et repository | Inspection du code |
+| ENF5 | Les entités JPA ne doivent pas être exposées directement | Présence et utilisation de DTO |
+| ENF6 | Les entrées doivent être validées | Tests des données invalides |
+| ENF7 | Les erreurs doivent être gérées centralement | @RestControllerAdvice et tests d'erreurs |
+| ENF8 | Les erreurs API doivent respecter le format imposé | Vérification des réponses JSON |
+| ENF9 | Le schéma de base doit être versionné | Migrations Flyway ou Liquibase |
+| ENF10 | ddl-auto=update est interdit hors tests | Vérification de configuration |
+| ENF11 | Un test unitaire doit vérifier une règle métier réelle | Exécution des tests |
+| ENF12 | Un test d'intégration doit vérifier un endpoint | Exécution sur environnement vierge |
+| ENF13 | Le frontend doit utiliser React, Angular ou Next.js | README et package |
+| ENF14 | Le frontend doit proposer trois espaces fonctionnels | Vérification des écrans |
+| ENF15 | Les appels API doivent être regroupés dans une couche dédiée | Inspection frontend |
+| ENF16 | Les états de chargement et d'erreur doivent être gérés | Test manuel |
+| ENF17 | La moyenne affichée doit provenir de l'API | Inspection du code frontend |
+| ENF18 | L'interface étudiant doit rester utilisable sur mobile | Test sur viewport mobile |
+| ENF19 | Le projet doit démarrer avec une procédure documentée courte | Test depuis un clone vierge |
+| ENF20 | Des données de démonstration doivent être disponibles au démarrage | Test de l'application vierge |
 
 ## 6. Règles de gestion
+
 | Réf | Règle | Source |
 |---|---|---|
 | RG1 | Le code de présence expire 15 minutes après l'ouverture de la session | Q2 |
-| RG2 | Un étudiant ne peut pas relire son propre exercice | Q5 |
-| RG3 | Un seul relecteur par exercice | Q6 |
-| RG4 | Le relecteur est choisi par le système, au hasard, parmi les étudiants présents à la session | Q7 |
-| RG5 | La note est un entier de 0 à 20 | Q9 |
-| RG6 | Le relecteur peut corriger sa note tant que le formateur n'a pas clôturé la session | Q10 |
-| RG7 | L'exercice sans relecteur rendu reste « EN_ATTENTE » et visible dans le tableau du formateur | Q11 |
-| RG8 | Le dépôt d'exercice reste possible après la fin du code, jusqu'à la clôture de la session | Q12 |
-| RG9 | Le lien de l'exercice peut être remplacé tant que la relecture n'a pas commencé | Q13 |
-| RG10 | La présence ajoutée à la main par le formateur est marquée `source: FORMATEUR` | Q14 |
-| RG11 | La note est définitive une fois la session clôturée ; plus aucune correction possible | Q15 (tranché, voir §7) |
-| RG12 | Après 5 codes erronés, l'étudiant est bloqué 2 minutes | Q4 |
-| RG13 | Une seule présence par étudiant et par session | Contrat (409 DEJA_PRESENT) |
+| RG2 | Une présence ne peut plus être enregistrée après la fin de la session | Q3 |
+| RG3 | Après cinq erreurs de code, l'étudiant est bloqué pendant deux minutes | Q4 |
+| RG4 | Un étudiant ne peut enregistrer qu'une seule présence pour une session | Contrat API |
+| RG5 | Un étudiant ne peut déposer qu'un seul exercice pour une session | Contrat API |
+| RG6 | Le dépôt d'exercice reste possible après expiration du code, jusqu'à la clôture de la session | Q12 |
+| RG7 | Le lien d'un exercice peut être remplacé tant qu'aucune relecture n'a commencé | Q13 |
+| RG8 | Un exercice possède un seul relecteur | Q6 |
+| RG9 | Le relecteur est choisi aléatoirement parmi les étudiants présents à la session | Q7 |
+| RG10 | L'auteur d'un exercice ne peut pas relire son propre exercice | Q5 |
+| RG11 | L'auteur voit sa note et son commentaire mais pas l'identité du relecteur | Q8 |
+| RG12 | Une note est un nombre entier compris entre 0 et 20 inclus | Q9 |
+| RG13 | Une présence ajoutée manuellement par le formateur porte la source FORMATEUR | Q14 + contrat API |
+| RG14 | Une présence enregistrée par l'étudiant porte la source ETUDIANT | Contrat API |
+| RG15 | Une relecture non rendue reste en attente et doit apparaître dans le tableau du formateur | Q11 |
+| RG16 | La relecture reste modifiable jusqu'à la clôture de la session | Q10 |
+| RG17 | Une relecture devient définitive lorsque la session est clôturée | Décision issue de Q10 |
+| RG18 | Une session peut continuer à recevoir des exercices après l'expiration du code | Q2 + Q12 |
+| RG19 | La clôture de session est distincte de l'expiration du code | Q2 + Q12 |
+| RG20 | L'identité du relecteur ne doit pas être communiquée à l'auteur de l'exercice | Q8 |
 
-## 7. Zones d'ombre, hypothèses et contradictions
-| Point | Réponse client (Qx) ou hypothèse | Décision retenue | Pourquoi |
-|---|---|---|---|
-| Q10 vs Q15 | Q10 : « le relecteur peut corriger sa note tant que le formateur n'a pas clôturé » — Q15 : « une fois que le relecteur a validé, c'est fini, il ne peut plus y revenir » | **Tranché en faveur de Q10** : correction possible jusqu'à la clôture de la session (RG6, RG11) | Q10 décrit un cas d'usage concret (faute de frappe), Q15 exprime une intention générale d'honnêteté ; la clôture matérialise cette intention |
-| Q8 vs Q15 | Q8 dit que l'étudiant voit sa note — mais si la note reste modifiable, que voit-il ? | La note affichée est toujours la dernière validée ; une correction la met à jour | Q8 (voir la note) et Q10 (pouvoir corriger) sont compatibles si l'affichage suit la dernière version |
-| Q4 — trou non vu | Q4 impose un blocage 2 min après 5 codes erronés, mais aucune question ne demande de détecter ces échecs | Comptage des échecs par (étudiant, session) en base, fenêtre glissante, réinitialisé à la réussite ou à l'expiration du blocage | Le blocage de Q4 est impossible sans traçage des tentatives ; décision écrite à la place du client |
-| Q7 vs session vide | Q7 : relecteur parmi les présents — que faire s'il n'y a aucun autre présent ? | L'exercice reste « EN_ATTENTE » sans relecteur, visible dans le tableau (RG7) | Hypothèse la plus prudente, cohérente avec Q11 |
-| Fin de session | Le sujet parle d'« expiration du code » (Q2) et de « fin de la session » (Q3, Q12) comme si c'était la même chose | Deux instants distincts : le code expire à H+15 ; la session reste ouverte pour les dépôts jusqu'à la clôture par le formateur | Q12 prouve que la session survit à l'expiration du code (« certains n'ont pas de connexion le soir même ») |
+## 7. Zones d'ombre, hypothèses et contradictions tranchées
+
+Cette section contient les décisions prises lorsque le client n'a pas fourni suffisamment d'informations.
+
+### 7.1 Contradiction Q10 / Q15
+**Réponses du client** — Q10 : le relecteur peut corriger sa note tant que le formateur n'a pas clôturé la session. Q15 : une fois la note envoyée, elle est définitive.
+Ces deux réponses sont contradictoires.
+
+**Décision** — La règle Q10 est retenue : une relecture envoyée reste modifiable jusqu'à la clôture de la session. Après clôture, elle devient définitive.
+
+**Justification** — Q10 fournit une condition temporelle précise et directement exploitable : la clôture de la session. Cette décision permet de définir clairement le cycle de vie d'une relecture et évite d'avoir deux règles contradictoires. Q15 est donc interprétée comme l'intention de rendre la note définitive, mais cette finalisation intervient dans notre modèle lors de la clôture.
+
+### 7.2 Clôture d'une session
+Le client mentionne plusieurs fois la clôture mais aucune opération permettant au formateur de clôturer une session n'est fournie dans les cinq endpoints obligatoires.
+
+**Décision** — Ajouter une opération complémentaire : `POST /api/sessions/{id}/cloture`. Elle retourne 200 lorsque la clôture est réussie. La clôture change l'état de la session : OUVERTE → CLOTUREE. Cette opération est ajoutée au contrat car le sujet autorise l'ajout d'opérations au-delà des cinq opérations imposées.
+
+### 7.3 Gestion des étudiants et promotions
+Le client indique que l'étudiant choisit son nom dans une liste, mais ne précise pas comment les étudiants et promotions sont créés.
+
+**Décision** — Les étudiants et promotions nécessaires au fonctionnement sont considérés comme des données préexistantes et sont fournies avec les données de démonstration. La création complète des étudiants et promotions est hors périmètre.
+
+### 7.4 Plusieurs sessions simultanées
+Le client ne précise pas si plusieurs sessions peuvent être ouvertes simultanément pour une même promotion.
+
+**Décision** — Une promotion peut posséder plusieurs sessions, mais une seule session peut être active pour une promotion donnée. Cette décision évite qu'un étudiant ou un formateur ne puisse confondre deux codes de présence actifs pour la même promotion.
+
+### 7.5 Dépôt par un étudiant non présent
+Q12 autorise le dépôt jusqu'à la clôture mais ne dit pas que l'étudiant doit être présent.
+
+**Décision** — La présence n'est pas une condition obligatoire au dépôt. Un étudiant peut donc déposer son exercice jusqu'à la clôture même si son code de présence a expiré ou s'il n'a pas marqué sa présence. Cette décision suit la formulation explicite de Q12.
+
+### 7.6 Aucun autre étudiant présent
+Q5 interdit l'auto-relecture et Q7 impose de choisir un étudiant présent. Si un seul étudiant est présent et qu'il dépose son exercice, aucun relecteur valide n'existe.
+
+**Décision** — L'exercice reste en état : EN_ATTENTE_RELECTEUR. Il n'est pas attribué à son auteur.
+
+### 7.7 Étudiant présent sans exercice
+Q7 indique que le relecteur est choisi parmi les étudiants présents.
+
+**Décision** — Un étudiant présent peut être choisi comme relecteur même s'il n'a pas encore déposé son propre exercice. Cela respecte directement la formulation de Q7.
+
+### 7.8 Début d'une relecture
+Q13 permet de modifier le lien tant que personne n'a commencé à relire. Le sujet ne définit pas ce qui constitue précisément le début de la relecture.
+
+**Décision** — L'attribution du relecteur est considérée comme le début de la relecture. Ainsi : EXERCICE_DEPOSE → RELECTEUR_ATTRIBUE → lien non modifiable.
+
+### 7.9 Moyenne sans note
+Q16 exige une moyenne mais ne précise pas la valeur lorsqu'aucune note n'existe.
+
+**Décision** — L'API retourne null lorsque l'étudiant n'a encore reçu aucune note. Le frontend affiche « — » plutôt que 0, car zéro est une note valide.
+
+### 7.10 Relecture en attente lors de la clôture
+Q11 demande que les relectures non rendues restent « en attente ».
+
+**Décision** — Une relecture non rendue au moment de la clôture reste historiquement en état EN_ATTENTE. Elle apparaît dans le tableau du formateur et n'est plus modifiable après clôture.
+
+### 7.11 Commentaire
+Le contrat prévoit un champ commentaire mais ne précise pas explicitement son caractère obligatoire.
+
+**Décision** — Le commentaire est obligatoire lors de la soumission d'une relecture. Cette décision garantit qu'une note est accompagnée d'un retour pédagogique.
 
 ## 8. Contraintes techniques
-B1 Java 17+, Maven, wrapper `mvnw` commité · B2 contrat `api/contrat.yaml` respecté à la lettre (chemins, verbes, codes, format d'erreur) · B3 couches controller/service/repository, DTO partout, aucune entité JPA exposée en JSON · B4 validation + `@RestControllerAdvice`, erreurs `{ code, message }`, jamais de stack trace · B5 schéma versionné par Flyway, migrations commitées, `ddl-auto=update` interdit hors tests · B6 un test unitaire sur une règle métier réelle + un test d'intégration sur un endpoint, tournant sans base locale · F1 Next.js justifié dans le README, build qui passe · F2 trois écrans : formateur, étudiant, relecteur · F3 couche API dédiée, états de chargement/erreur, moyenne jamais recalculée côté frontend.
+
+**Backend** — Java 17 ou supérieur ; Spring Boot ; Maven ; wrapper Maven versionné ; API REST ; séparation Controller / Service / Repository ; DTO ; validation ; @RestControllerAdvice ; migrations Flyway ou Liquibase ; aucun ddl-auto=update hors tests ; tests unitaires ; tests d'intégration.
+
+**Frontend** — React ; appels API dans une couche dédiée ; gestion des états de chargement ; gestion des erreurs ; aucune duplication de règle métier ; trois espaces fonctionnels.
+
+**API** — Les cinq opérations imposées sont obligatoires et doivent respecter exactement les chemins, verbes, corps, réponses et codes HTTP du contrat. Les erreurs utilisent systématiquement : `{ "code": "CODE_ERREUR", "message": "Message explicatif." }`
+
+**Infrastructure** — L'application doit pouvoir être démarrée avec Docker Compose ou avec au maximum trois commandes documentées dans le README. Des données de démonstration doivent être disponibles.
 
 ## 9. Livrables
-Dépôt public `kfokam48-epreuve-269` : `docs/CAHIER_DES_CHARGES.md`, `docs/diagrammes/` (D1–D3 + D4 bonus, Mermaid), `docs/JOURNAL.md`, `api/contrat.yaml` complété, `backend/` Spring Boot (Flyway, DTO, tests), `frontend/` Next.js (3 écrans), `CHANGELOG.md`, `README.md` testé depuis un clone vierge, backlog en issues GitHub, `SOUMISSION.md`. Second dépôt `kfokam48-gitlab-269` à l'étape 5.
+
+Le dépôt doit contenir :
+```
+/
+├── docs/
+│   ├── CAHIER_DES_CHARGES.md
+│   ├── JOURNAL.md
+│   └── diagrammes/
+│       ├── D1-cas-utilisation.md
+│       ├── D2-modele-donnees.md
+│       ├── D3-sequence-presence.md
+│       └── D4-cycle-vie-exercice.md
+├── api/
+│   └── contrat.yaml
+├── backend/
+│   ├── pom.xml
+│   ├── mvnw
+│   └── src/
+├── frontend/
+│   └── ...
+├── README.md
+├── CHANGELOG.md
+└── .gitignore
+```
+
+Les trois jalons obligatoires sont : `[JALON] analyse`, `[JALON] v0.1`, `[JALON] v1.0`
 
 ## 10. Démarche prévue
-Étape 1 : analyse, diagrammes, contrat, issues → commit `[JALON] analyse`. Étape 2 : stories Must uniquement, une branche par ticket, une PR par branche, issues fermées par les commits → `[JALON] v0.1`. Étape 3 : ouverture de l'enveloppe, issue avant de coder, migration versionnée, contrat et analyse mis à jour. Étape 4 : `[JALON] v1.0`, CHANGELOG, README testé. Étape 5 : épreuve git-lab sur le second dépôt. Étape 6 : SOUMISSION.md.
-**Definition of Done :** un ticket est terminé quand son code est revu en PR, les tests passent, la règle RGx citée est couverte par un test ou une vérification explicite, l'issue est fermée par un commit, et tout est poussé sur origin.
+
+**Étape 1 — Analyse et conception** — Avant tout code : finaliser le cahier des charges ; finaliser les exigences fonctionnelles ; finaliser les règles de gestion ; produire D1 ; produire D2 ; produire D3 ; produire D4 ; compléter le contrat API ; créer les issues GitHub ; vérifier la cohérence entre API, modèle et règles ; créer le commit `[JALON] analyse`. Aucun code Spring Boot ne doit être créé avant cette étape.
+
+**Étape 2 — Version v0.1** — Développer uniquement les fonctionnalités Must. Pour chaque issue : Issue → branche → développement → tests → PR → commit explicite → fermeture de l'issue. Puis : `[JALON] v0.1` et push.
+
+**Étape 3 — Changement de besoin** — Après le push de v0.1, récupérer l'enveloppe. Le bug et le changement de besoin doivent être traités comme une évolution réelle : ouvrir une issue ; reproduire le bug ; identifier son impact ; modifier la migration ; mettre à jour le contrat ; mettre à jour le cahier des charges ; mettre à jour les diagrammes ; reprioriser le backlog ; corriger ; tester.
+
+**Étape 4 — Version finale** — terminer les fonctionnalités restantes ; intégrer le changement de l'enveloppe ; vérifier le contrat API ; vérifier les tests ; tester l'installation depuis un clone vierge ; mettre à jour le README ; produire le CHANGELOG ; trier les issues restantes ; créer `[JALON] v1.0`.
+
+**Étape 5 — Soumission** — Créer SOUMISSION.md avec : nom ; matricule ; centre ; URL du dépôt public ; hash complet du commit final ; framework frontend ; commande de démarrage. La soumission doit être déposée avant 18h00.
+
+**Definition of Done** — Une issue est considérée comme terminée lorsque : son critère d'acceptation est satisfait ; le comportement a été testé ; le code respecte l'architecture ; les erreurs prévues sont gérées ; aucune règle métier n'est dupliquée ; la documentation concernée est mise à jour si nécessaire ; le commit est atomique et explicite ; la branche correspondante possède une PR ; l'issue est correctement référencée et fermée ; aucune régression connue n'est introduite.
