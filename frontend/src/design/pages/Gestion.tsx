@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Plus, UserPlus, Users } from 'lucide-react';
+import { Plus, Trash2, UserPlus, Users } from 'lucide-react';
 import { toast } from 'sonner';
 import { PageHeader } from '../components/PageHeader';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/Card';
@@ -12,13 +12,27 @@ import { ErrorState } from '../components/feedback/ErrorState';
 import { LoadingRows } from '../components/feedback/LoadingRows';
 import { useApiQuery } from '../hooks/useApiQuery';
 import { api, toApiError } from '../utils/api';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle } from
+'../components/ui/AlertDialog';
 
-/** Ecran de gestion (evolution PO, closes #29) : promotions et etudiants, formateur only. */
+/** Ecran de gestion (evolution PO, closes #29/#30) : promotions et etudiants, formateur only. */
 export function Gestion() {
   const promotionsQ = useApiQuery(() => api.listerPromotions(), []);
   const [promotionId, setPromotionId] = useState('');
   const etudiantsQ = useApiQuery(
     () => api.listerEtudiants(promotionId), [promotionId], { enabled: Boolean(promotionId) });
+  const [aSupprimer, setASupprimer] = useState<{ type: 'promotion' | 'etudiant'; id: string; nom: string } | null>(null);
+  const [suppression, setSuppression] = useState(false);
+
+  const promotionChoisie = promotionsQ.data?.find((p) => p.id === promotionId) ?? null;
 
   useEffect(() => {
     if (!promotionId && promotionsQ.data && promotionsQ.data.length > 0) setPromotionId(promotionsQ.data[0].id);
@@ -65,6 +79,28 @@ export function Gestion() {
     }
   }
 
+  async function confirmerSuppression() {
+    if (!aSupprimer) return;
+    setSuppression(true);
+    try {
+      if (aSupprimer.type === 'etudiant') {
+        await (api as any).supprimerEtudiant(aSupprimer.id);
+        toast.success(`${aSupprimer.nom} supprimé`);
+        etudiantsQ.reload();
+      } else {
+        await (api as any).supprimerPromotion(aSupprimer.id);
+        toast.success(`Promotion « ${aSupprimer.nom} » supprimée`);
+        setPromotionId('');
+        promotionsQ.reload();
+      }
+      setASupprimer(null);
+    } catch (err) {
+      toast.error(toApiError(err).message);
+    } finally {
+      setSuppression(false);
+    }
+  }
+
   return (
     <div className="space-y-6">
       <PageHeader
@@ -88,6 +124,15 @@ export function Gestion() {
                 {creePromotion ? <Spinner /> : <Plus />} Créer la promotion
               </Button>
             </form>
+            {promotionChoisie &&
+              <Button
+                variant="outline"
+                className="w-full text-destructive hover:bg-destructive/10"
+                onClick={() => setASupprimer({ type: 'promotion', id: promotionChoisie.id, nom: promotionChoisie.nom })}>
+                
+                <Trash2 /> Supprimer cette promotion
+              </Button>
+            }
           </CardContent>
         </Card>
 
@@ -146,11 +191,43 @@ export function Gestion() {
                   {etudiantsQ.data.map((e) =>
                     <li key={e.id} className="flex items-center justify-between px-3 py-2 text-sm">
                       <span className="font-medium">{e.prenom} {e.nom}</span>
-                      <span className="font-mono text-muted-foreground">{(e.prenom + '.' + e.nom).toLowerCase()}</span>
+                      <span className="flex items-center gap-2">
+                        <span className="font-mono text-muted-foreground">{(e.prenom + '.' + e.nom).toLowerCase()}</span>
+                        <Button
+                          variant="ghost"
+                          size="icon-sm"
+                          aria-label={`Supprimer ${e.prenom} ${e.nom}`}
+                          onClick={() => setASupprimer({ type: 'etudiant', id: e.id, nom: `${e.prenom} ${e.nom}` })}>
+                          
+                          <Trash2 className="size-4 text-muted-foreground hover:text-destructive" />
+                        </Button>
+                      </span>
                     </li>)}
                 </ul>}
         </CardContent>
       </Card>
+
+      <AlertDialog open={aSupprimer !== null} onOpenChange={(o) => !o && setASupprimer(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              Supprimer {aSupprimer?.type === 'promotion' ? 'la promotion' : 'l’étudiant'} « {aSupprimer?.nom} » ?
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {aSupprimer?.type === 'promotion'
+                ? 'Seule une promotion sans étudiant ni session peut être supprimée.'
+                : 'Seul un étudiant sans présence, exercice ni relecture peut être supprimé. Son compte de connexion est détruit avec lui.'}
+              {' '}Cette action est irréversible.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmerSuppression}>
+              {suppression ? <Spinner /> : <Trash2 />} Supprimer définitivement
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>);
 
 }

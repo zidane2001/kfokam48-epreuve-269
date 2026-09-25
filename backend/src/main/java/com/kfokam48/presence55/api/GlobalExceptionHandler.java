@@ -51,6 +51,8 @@ public class GlobalExceptionHandler {
         return switch (code) {
             case "NON_AUTHENTIFIE", "IDENTIFIANTS_INVALIDES" -> HttpStatus.UNAUTHORIZED; // 401 (evolution PO)
             case "ACCES_REFUSE" -> HttpStatus.FORBIDDEN;             // 403 (evolution PO)
+            case "ETUDIANT_A_DEJA_PARTICIPE", "PROMOTION_NON_VIDE",
+                 "PROMOTION_A_DEJA_SESSION" -> HttpStatus.CONFLICT;  // 409 (closes #30)
             case "CODE_EXPIRE" -> HttpStatus.GONE;                    // 410
             case "DEJA_PRESENT", "EXERCICE_DEJA_DEPOSE",
                  "RELECTURE_DEJA_RENDUE", "SESSION_DEJA_CLOTUREE",

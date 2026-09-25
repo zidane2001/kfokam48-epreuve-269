@@ -33,14 +33,27 @@ public class GestionController {
     private final PromotionRepository promotions;
     private final EtudiantRepository etudiants;
     private final CompteRepository comptes;
+    private final com.kfokam48.presence55.repository.SessionRepository sessions;
+    private final com.kfokam48.presence55.repository.PresenceRepository presences;
+    private final com.kfokam48.presence55.repository.ExerciceRepository exercices;
+    private final com.kfokam48.presence55.repository.RelectureRepository relectures;
     private final AuthService auth;
     private final AccessGuard guard;
 
     public GestionController(PromotionRepository promotions, EtudiantRepository etudiants,
-                             CompteRepository comptes, AuthService auth, AccessGuard guard) {
+                             CompteRepository comptes,
+                             com.kfokam48.presence55.repository.SessionRepository sessions,
+                             com.kfokam48.presence55.repository.PresenceRepository presences,
+                             com.kfokam48.presence55.repository.ExerciceRepository exercices,
+                             com.kfokam48.presence55.repository.RelectureRepository relectures,
+                             AuthService auth, AccessGuard guard) {
         this.promotions = promotions;
         this.etudiants = etudiants;
         this.comptes = comptes;
+        this.sessions = sessions;
+        this.presences = presences;
+        this.exercices = exercices;
+        this.relectures = relectures;
         this.auth = auth;
         this.guard = guard;
     }
@@ -99,5 +112,43 @@ public class GestionController {
 
     static String loginDe(String prenom, String nom) {
         return (prenom + "." + nom).toLowerCase().replace(" ", "-").replace("'", "");
+    }
+
+    /** DELETE /api/etudiants/{id} — suppression d'un etudiant SANS participation
+     *  (closes #30). Le compte de connexion est detruit avec lui. 409 sinon. */
+    @DeleteMapping("/api/etudiants/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @org.springframework.transaction.annotation.Transactional
+    public void supprimerEtudiant(@PathVariable Long id, HttpServletRequest request) {
+        guard.exigerFormateur(request);
+        Etudiant e = etudiants.findById(id)
+                .orElseThrow(() -> new BusinessException("ETUDIANT_INCONNU", "Cet etudiant n'existe pas."));
+        if (presences.countByEtudiantId(id) > 0
+                || exercices.countByEtudiantId(id) > 0
+                || relectures.countByRelecteurId(id) > 0) {
+            throw new BusinessException("ETUDIANT_A_DEJA_PARTICIPE",
+                    "Cet etudiant a deja une presence, un exercice ou une relecture : suppression impossible.");
+        }
+        comptes.findByEtudiantId(id).forEach(comptes::delete);
+        etudiants.delete(e);
+    }
+
+    /** DELETE /api/promotions/{id} — suppression d'une promotion VIDE (closes #30). */
+    @DeleteMapping("/api/promotions/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @org.springframework.transaction.annotation.Transactional
+    public void supprimerPromotion(@PathVariable Long id, HttpServletRequest request) {
+        guard.exigerFormateur(request);
+        Promotion p = promotions.findById(id)
+                .orElseThrow(() -> new BusinessException("PROMOTION_INCONNUE", "Cette promotion n'existe pas."));
+        if (!etudiants.findByPromotionId(id).isEmpty()) {
+            throw new BusinessException("PROMOTION_NON_VIDE",
+                    "Supprimez d'abord les etudiants de cette promotion.");
+        }
+        if (!sessions.findByPromotionId(id).isEmpty()) {
+            throw new BusinessException("PROMOTION_A_DEJA_SESSION",
+                    "Cette promotion possede des sessions : suppression impossible.");
+        }
+        promotions.delete(p);
     }
 }

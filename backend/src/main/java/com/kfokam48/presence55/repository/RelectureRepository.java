@@ -10,5 +10,6 @@ public interface RelectureRepository extends JpaRepository<Relecture, Long> {
     java.util.List<Relecture> findAllByExerciceId(Long exerciceId);
     boolean existsByExerciceIdAndRelecteurId(Long exerciceId, Long relecteurId);
     List<Relecture> findByRelecteurId(Long relecteurId);
+    long countByRelecteurId(Long relecteurId);
     List<Relecture> findByRelecteurIdAndRendueAtIsNull(Long relecteurId);
 }

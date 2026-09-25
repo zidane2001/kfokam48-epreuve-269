@@ -48,7 +48,7 @@ export class ApiError extends Error {
   }
 }
 
-type Method = 'GET' | 'POST' | 'PUT';
+type Method = 'GET' | 'POST' | 'PUT' | 'DELETE';
 
 async function transport(method: Method, path: string, body?: unknown): Promise<{status: number;body: unknown;}> {
   const token = getAuthToken();
@@ -126,6 +126,17 @@ export const api = {
   inscrireEtudiant: (promotionId: string, prenom: string, nom: string) =>
     request<{ id: number; prenom: string; nom: string; promotionId: number; login: string }>(
       'POST', `/api/etudiants?promotionId=${promotionId}`, { prenom, nom }),
+
+  /** Suppressions (evolution PO, formateur) — 204 attendu. */
+  supprimerEtudiant: async (etudiantId: string) => {
+    await request<unknown>('DELETE', `/api/etudiants/${etudiantId}`);
+    return { supprime: true };
+  },
+
+  supprimerPromotion: async (promotionId: string) => {
+    await request<unknown>('DELETE', `/api/promotions/${promotionId}`);
+    return { supprime: true };
+  },
   listerPromotions: async () => {
     const promotions = await request<{ id: number; nom: string; etudiants: { id: number; nom: string }[] }[]>('GET', '/api/promotions');
     return promotions.map(p => ({
