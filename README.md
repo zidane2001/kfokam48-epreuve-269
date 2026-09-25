@@ -27,9 +27,10 @@ Chaque utilisateur dispose de ses identifiants (tokens JWT, mots de passe haché
 | Formateur | `formateur` | `formateur` |
 | Étudiant | `prenom.nom` (ex. `yannick.tchoupo`) | identique au login |
 
-- Les espaces **Formateur** et **Suivi** sont réservés au compte formateur ; l'espace **Étudiant** au compte étudiant connecté.
+- Les espaces **Formateur**, **Suivi** et **Gestion** sont réservés au compte formateur ; l'espace **Étudiant** au compte étudiant connecté.
 - Un étudiant ne peut agir **que sur sa propre identité** (présence, dépôt, relectures) — l'identité ne se choisit plus dans une liste.
-- Variables optionnelles : `AUTH_SECRET` (clé de signature JWT, 32+ caractères) et `AUTH_REQUIS=false` pour désactiver l'authentification (mode contrat du sujet, démo/correction).
+- L'écran **Gestion** permet au formateur de créer des promotions et d'inscrire des étudiants (compte créé automatiquement, login `prenom.nom`).
+- Variables optionnelles : `AUTH_SECRET` (clé de signature JWT, 32+ caractères) et `AUTH_REQUIS=false` pour désactiver l'authentification (mode contrat du sujet : choix libre d'identité, comme au Q1).
 
 ### Configuration de la base
 
@@ -46,7 +47,7 @@ Le schéma est versionné par **Flyway** (migrations `V1`→`V6` appliquées au 
 ## Tests
 
 ```bash
-cd backend && ./mvnw test     # 42 tests (H2 mémoire, aucune base requise)
+cd backend && ./mvnw test     # 45 tests (H2 mémoire, aucune base requise)
 cd frontend && npm run build  # build de production
 ```
 

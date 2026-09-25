@@ -20,5 +20,9 @@ Chaque issue renvoie aux EFx/RGx du cahier des charges. Une branche par ticket, 
 | 13 | L'étudiant voit ses notes reçues sans le nom du relecteur | Should | EF9, Q8 | GET relectures-recues : note + commentaire, relecteurId jamais exposé |
 | 14 | L'étudiant remplace son lien tant que personne n'a relu | Could | EF10, RG9 | PUT → 200 ; 409 RELECTURE_COMMENCEE |
 | 15 | Blocage 2 min après 5 codes erronés | Should | EF12, RG12 | 429 TROP_DE_TENTATIVES pendant 2 min ; compteur réinitialisé à la réussite |
+| 16 | [EVO] Authentification par comptes (issue #27) | Évolution (post-soumission) | CDC 7.14 | BCrypt + JWT ; rôles FORMATEUR/ETUDIANT ; identité portée par le token ; écran /connexion ; AUTH_REQUIS=false retablit le mode contrat ; 5 tests dédiés |
+| 17 | [EVO] Vue riche GET /api/suivi pour le design (issue #28) | Évolution (post-soumission) | EF16, F3 | enveloppe { lignes, totaux } ; moyennePromotion calculée serveur ; moyenne null si aucune note (7.9) ; contrat /api/tableau intact ; 4 tests |
+| 18 | [EVO] Gestion des promotions et étudiants (issue #29) | Évolution (post-soumission) | EF19, EF20, CDC 7.15 | POST /api/promotions, POST /api/etudiants (formateur) ; compte créé automatiquement (login prenom.nom) ; écran /gestion ; 403 si étudiant ; 3 tests |
 
-*Ordre d'exécution Must : 1 → 3 → 2 → 4 → 5 → 6 → 7 → 8 → 9.*
+*Ordre d'exécution Must : 1 → 3 → 2 → 4 → 5 → 6 → 7 → 8 → 9. Tickets 16-18 : évolutions découpées
+après la soumission à la demande du PO, une issue GitHub chacune (#27, #28, #29).*

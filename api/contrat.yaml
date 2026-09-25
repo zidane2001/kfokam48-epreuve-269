@@ -279,6 +279,108 @@ paths:
                   promotionId: { type: integer, format: int64, nullable: true }
         "401": { $ref: "#/components/responses/Erreur" }   # NON_AUTHENTIFIE
 
+  /api/auth/mode:
+    get:
+      summary: Indique si l'authentification est active (evolution PO)
+      responses:
+        "200":
+          description: Mode courant
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  authRequise: { type: boolean }
+
+  /api/promotions:
+    post:
+      summary: Creer une promotion (evolution PO, CDC 7.15, formateur uniquement)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [nom]
+              properties:
+                nom: { type: string, maxLength: 120 }
+      responses:
+        "201":
+          description: Promotion creee
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id: { type: integer, format: int64 }
+                  nom: { type: string }
+        "400": { $ref: "#/components/responses/Erreur" }   # VALIDATION / CHAMP_MANQUANT
+        "401": { $ref: "#/components/responses/Erreur" }   # NON_AUTHENTIFIE
+        "403": { $ref: "#/components/responses/Erreur" }   # ACCES_REFUSE
+
+  /api/etudiants:
+    post:
+      summary: Inscrit un etudiant et cree son compte (evolution PO, CDC 7.15, formateur uniquement)
+      parameters:
+        - name: promotionId
+          in: query
+          required: true
+          schema: { type: integer, format: int64 }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [prenom, nom]
+              properties:
+                prenom: { type: string, maxLength: 80 }
+                nom: { type: string, maxLength: 120 }
+      responses:
+        "201":
+          description: Etudiant inscrit, compte cree (login prenom.nom)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id: { type: integer, format: int64 }
+                  prenom: { type: string }
+                  nom: { type: string }
+                  promotionId: { type: integer, format: int64 }
+                  login: { type: string }
+        "400": { $ref: "#/components/responses/Erreur" }   # VALIDATION
+        "401": { $ref: "#/components/responses/Erreur" }   # NON_AUTHENTIFIE
+        "403": { $ref: "#/components/responses/Erreur" }   # ACCES_REFUSE
+        "404": { $ref: "#/components/responses/Erreur" }   # PROMOTION_INCONNUE
+
+  /api/promotions/{id}/etudiants:
+    get:
+      summary: Liste les etudiants d'une promotion (evolution PO, formateur uniquement)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer, format: int64 }
+      responses:
+        "200":
+          description: Etudiants de la promotion
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id: { type: integer, format: int64 }
+                    prenom: { type: string }
+                    nom: { type: string }
+                    promotionId: { type: integer, format: int64 }
+                    login: { type: string }
+        "401": { $ref: "#/components/responses/Erreur" }   # NON_AUTHENTIFIE
+        "403": { $ref: "#/components/responses/Erreur" }   # ACCES_REFUSE
+        "404": { $ref: "#/components/responses/Erreur" }   # PROMOTION_INCONNUE
+
   /api/sessions/{id}/cloture:
     post:
       summary: Le formateur clôture la session (EF11)

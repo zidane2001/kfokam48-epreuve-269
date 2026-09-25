@@ -117,6 +117,8 @@ Les éléments suivants ne font pas partie du périmètre initial :
 | EF14 | L'étudiant peut modifier son lien sous condition | Le lien peut être remplacé tant que la relecture n'a pas commencé | Must |
 | EF15 | Le formateur peut clôturer une session | Une session clôturée n'accepte plus les opérations qui dépendent de son ouverture | Must |
 | EF16 | Le formateur peut consulter le tableau | Le tableau présente pour chaque étudiant sa présence, ses exercices déposés, sa moyenne et ses relectures en attente | Must |
+| EF19* | Le formateur crée une promotion | Le formateur crée une promotion par son nom ; elle apparaît immédiatement dans tous les écrans de sélection | Should (évolution §7.15) |
+| EF20* | Le formateur inscrit un étudiant | Le formateur ajoute un étudiant (prénom, nom) à une promotion ; un compte de connexion est créé automatiquement (login prenom.nom) | Should (évolution §7.15) |
 | EF17 | Une relecture peut être modifiée avant clôture | Une relecture déjà envoyée reste modifiable jusqu'à la clôture de la session | Must |
 | EF18 | Une relecture devient définitive après clôture | Après clôture de la session, aucune modification de la relecture n'est possible | Must |
 
@@ -263,6 +265,22 @@ pour des raisons d'audit.
 
 **Impact** — Additif documenté ici pour la traçabilité ; les 37 tests du contrat restent verts
 (`auth.requis=false` en tests), 5 nouveaux tests verrouillent le mode authentifié.
+
+### 7.15 Gestion des promotions et des étudiants (évolution décidée par le PO, post-soumission)
+**Contexte** — Après soumission, le PO a constaté qu'aucune interface ne permet de créer des promotions ni
+d'inscrire des étudiants : le jeu de démonstration était le seul moyen d'obtenir des comptes.
+
+**Décision** — Ajout d'un écran **Gestion** (formateur uniquement) :
+- créer une promotion par son nom ;
+- inscrire un étudiant (prénom, nom) dans une promotion ;
+- chaque étudiant inscrit reçoit **automatiquement son compte de connexion** (login `prenom.nom`, mot de passe
+  initial identique — à changer à la première connexion en production) ; en cas d'homonymie, le login est suffixé
+  par l'identifiant de l'étudiant ;
+- EF19/EF20 ajoutées au tableau des exigences (Should, évolution), cas d'usage ajoutés à D1, entité COMPTE à D2.
+
+**API ajoutée** — `POST /api/promotions`, `POST /api/etudiants?promotionId=`,
+`GET /api/promotions/{id}/etudiants` (formateur uniquement) ; `GET /api/auth/mode` (public) permet au front de
+savoir si l'authentification est active.
 
 ## 8. Contraintes techniques
 

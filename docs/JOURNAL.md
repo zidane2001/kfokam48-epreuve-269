@@ -20,5 +20,10 @@
 **Bloqué :** ~30 min de diagnostic sur le 500 tableau (le handler ne loggeait pas les stack traces — log d'erreur ajouté, ce qui a révélé le bug) ; ~15 min sur les garde-fous MockMvc (drapeau auth.requis pour préserver les 37 tests du contrat).
 **IA :** a diagnostiqué les 3 bugs via logs exécutés (pas à l'œil), écrit les correctifs + tests de régression, implémenté l'auth bout en bout ; chaque étape validée par exécution réelle contre Neon (logins curl, 401/403/200 vérifiés, 42/42 tests H2).
 
+## Étape 4 (suite) — Évolutions PO et gestion
+**Fait :** à la demande du PO après navigation : gestion des promotions et des étudiants (issue #29, CDC §7.15) — POST /api/promotions, POST /api/etudiants avec création automatique du compte (login prenom.nom), écran /gestion réservé au formateur ; issues #27 (auth), #28 (vue /api/suivi), #29 créées pour tracer chaque évolution ; documentation resynchronisée : CDC (EF19/EF20, §7.15), D1 (connexion, création promotion, inscription étudiant), D2 (entité COMPTE + schéma réaligné sur V1→V6), BACKLOG (tickets 16-18). Correctif de résilience Neon (Hikari max-lifetime/keepalive) après constat de connexions fermées pendant la veille du poste.
+**Bloqué :** ~10 min de compilation (référence au DTO imbriqué de PromotionController — remplacé par des DTOs locaux) ; homonymies d'étudiants traitées par suffixe du login avec l'id.
+**IA :** a implémenté l'écran de gestion et les endpoints, exécuté l'E2E réel (promotion KFOKAM49 créée, étudiante Diane Ngoma inscrite, son compte a ouvert une session immédiatement), mis à jour toutes les documentations en repartant des fichiers (pas de mémoire).
+
 ## Étape 5 — Épreuve Git
 *(à venir)*
