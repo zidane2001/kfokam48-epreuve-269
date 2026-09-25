@@ -2,6 +2,7 @@ package com.kfokam48.presence55.api;
 
 import com.kfokam48.presence55.dto.ApiError;
 import com.kfokam48.presence55.exception.BusinessException;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -24,6 +25,14 @@ public class GlobalExceptionHandler {
                 .map(f -> f.getField() + " : " + f.getDefaultMessage())
                 .findFirst().orElse("Requete invalide.");
         return ResponseEntity.badRequest().body(new ApiError("CHAMP_MANQUANT", msg));
+    }
+
+    /** Issue #24 : collision de contrainte unique (course concurrente) -> 409 propre, jamais 500. */
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<ApiError> integrite(DataIntegrityViolationException e) {
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(new ApiError("DEJA_PRESENT",
+                        "Cette presence a deja ete enregistree par une autre requete."));
     }
 
     @ExceptionHandler(Exception.class)
