@@ -71,6 +71,15 @@ class TableauApiIntegrationTest {
     }
 
     @Test
+    void moyenne_null_quand_aucune_note_recue() throws Exception {
+        // CDC v2 7.9 : Bob n'a recu aucune note -> moyenne absente (null), pas 0
+        mvc.perform(get("/api/tableau").param("promotionId", String.valueOf(promoId)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[1].nom").value("Bob"))
+                .andExpect(jsonPath("$[1].moyenne").value(org.hamcrest.Matchers.nullValue()));
+    }
+
+    @Test
     void promotion_inconnue_404() throws Exception {
         mvc.perform(get("/api/tableau").param("promotionId", "999999999"))
                 .andExpect(status().isNotFound())

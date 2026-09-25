@@ -25,11 +25,16 @@ public class SessionService {
         this.promotions = promotions;
     }
 
-    /** EF1 : le formateur ouvre une session et obtient un code expirant a H+15. */
+    /** EF1 : le formateur ouvre une session et obtient un code expirant a H+15.
+     *  CDC v2 7.4 : une seule session active (non cloturee) par promotion. */
     @Transactional
     public SessionResponse ouvrir(OuvrirSessionRequest req) {
         if (!promotions.existsById(req.promotionId())) {
             throw new BusinessException("PROMOTION_INCONNUE", "Cette promotion n'existe pas.");
+        }
+        if (sessions.existsByPromotionIdAndClotureeFalse(req.promotionId())) {
+            throw new BusinessException("SESSION_DEJA_ACTIVE",
+                    "Une session est deja active pour cette promotion. Cloturez-la d'abord.");
         }
         String code;
         do {

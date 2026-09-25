@@ -48,6 +48,10 @@ public class PresenceService {
             enregistrerEchec(session.getId(), req.etudiantId(), maintenant);
             throw new BusinessException("CODE_EXPIRE", "Le code de presence a expire.");
         }
+        if (session.isCloturee()) {                                     // RG2 (Q3) -> 409
+            throw new BusinessException("SESSION_CLOTUREE",
+                    "Cette session est cloturee : presence impossible.");
+        }
         if (presences.existsBySessionIdAndEtudiantId(session.getId(), req.etudiantId())) {
             throw new BusinessException("DEJA_PRESENT",
                     "Vous etes deja marque present pour cette session."); // RG13 -> 409
