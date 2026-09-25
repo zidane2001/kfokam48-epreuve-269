@@ -8,8 +8,8 @@ erDiagram
     ETUDIANT ||--o{ PRESENCE : "marque"
     SESSION_COURS ||--o{ EXERCICE : "recoit"
     ETUDIANT ||--o{ EXERCICE : "depose"
-    EXERCICE ||--o| RELECTURE : "fait l objet de"
-    ETUDIANT ||--o| RELECTURE : "effectue au plus une"
+    EXERCICE ||--o{ RELECTURE : "fait l objet de (2, issue 25)"
+    ETUDIANT ||--o{ RELECTURE : "effectue"
     SESSION_COURS ||--o{ TENTATIVE_CODE : "trace"
 
     PROMOTION {
@@ -45,8 +45,8 @@ erDiagram
     }
     RELECTURE {
       bigint id PK
-      bigint exercice_id FK "unique (RG3)"
-      bigint relecteur_id FK "different du depositaire (RG2)"
+      bigint exercice_id FK "issue 25 : 2 relectures par exercice"
+      bigint relecteur_id FK "different du depositaire (RG10), unique par exercice"
       int note "entier 0-20 (RG5)"
       varchar commentaire
       timestamp rendue_at

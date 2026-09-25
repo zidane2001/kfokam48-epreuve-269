@@ -124,7 +124,7 @@ paths:
         "409": { $ref: "#/components/responses/Erreur" }   # RELECTURE_DEJA_RENDUE
 
     put:
-      summary: Le relecteur corrige sa note tant que la session n'est pas clôturée (EF6, RG6)
+      summary: "Le relecteur corrige sa note tant que la session n'est pas clôturée (EF17, RG16). Issue #25 : DEUX relecteurs par exercice, la note exposée à l'auteur est la moyenne des rendues, provisoire si une seule (RG21/RG22)"
       parameters:
         - name: id
           in: path

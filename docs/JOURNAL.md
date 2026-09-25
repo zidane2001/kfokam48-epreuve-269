@@ -11,7 +11,9 @@
 **IA :** a écrit code et tests ; chaque livrable vérifié par exécution réelle (compilation, tests H2, démarrage contre Neon, parcours curl, build Next.js). 4 vrais bugs trouvés et corrigés grâce aux tests (mauvais repository, blocage jamais persisté, DTO trompé d'id, statut HTTP erroné).
 
 ## Étape 3 — Enveloppe
-*(à venir)*
+**Fait :** issue #24 (bug course concurrente présence) ouverte AVANT le correctif ; test avec 2 requêtes simultanées (latch) qui échoue sur v0.1 (500 constaté) ; correctif = mapping DataIntegrityViolationException → 409 DEJA_PRESENT ; test vert ; branche et commit dédiés (`fixes #24`). Changement de besoin : issue #25 (deux relecteurs, moyenne, provisoire) ; migration V5 ajoutée (V1–V4 intouchées), base de démo survivante vérifiée sur Neon ; RG8 remplacée, RG21/RG22 ajoutées, §7.12/7.13 écrits ; D2/D4 corrigés ; périmètre sacrifié assumé (EF14 : bouton front reporté, API gardée) ; correctif et évolution dans 2 branches/2 PR séparés.
+**Bloqué :** ~25 min pour reproduire la course de façon déterministe (le check existsBy masquait le bug sur H2 — résolu par 2 threads + CountDownLatch) ; ~10 min sur un test trop rapide qui attendait RELU alors qu'un seul relecteur sur deux avait rendu.
+**IA :** a écrit correctif, migration et tests ; chaque étape vérifiée par exécution (test rouge sur v0.1, vert après ; V5 appliquée sur Neon sans perte).
 
 ## Étape 4 — Version finale (v1.0)
 *(à venir)*
