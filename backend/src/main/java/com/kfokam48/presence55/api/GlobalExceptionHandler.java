@@ -38,7 +38,7 @@ public class GlobalExceptionHandler {
             case "CODE_EXPIRE" -> HttpStatus.GONE;                    // 410
             case "DEJA_PRESENT", "EXERCICE_DEJA_DEPOSE",
                  "RELECTURE_DEJA_RENDUE", "SESSION_DEJA_CLOTUREE",
-                 "RELECTURE_COMMENCEE" -> HttpStatus.CONFLICT;        // 409
+                 "SESSION_DEJA_ACTIVE", "RELECTURE_COMMENCEE" -> HttpStatus.CONFLICT;        // 409
             case "AUTO_RELECTURE" -> HttpStatus.FORBIDDEN;            // 403
             case "PROMOTION_INCONNUE", "SESSION_INCONNUE",
                  "ETUDIANT_INCONNU", "EXERCICE_INCONNU",
